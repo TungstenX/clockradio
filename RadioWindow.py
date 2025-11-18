@@ -14,30 +14,10 @@
         time.sleep(1)
 """
 import json
-import threading
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (QMainWindow, QComboBox, QLabel, QVBoxLayout, QWidget, QPushButton, QGestureEvent,
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import (QMainWindow, QComboBox, QVBoxLayout, QWidget, QPushButton, QGestureEvent,
                              QHBoxLayout, QDockWidget)
-
-
-
-
-# from PyQt5.QtCore import Qt
-# from PyQt5.QtGui import QPixmap
-# from PyQt5.QtWidgets import (
-#     QApplication,
-#     QCheckBox,
-#     QComboBox,
-#     QDoubleSpinBox,
-#     QLabel,
-#     QLineEdit,
-#     QListWidget,
-#     QMainWindow,
-#     QSlider,
-#     QSpinBox,
-# )
-
 
 class RadioWindow(QMainWindow):
     def __init__(self, main):
@@ -46,7 +26,7 @@ class RadioWindow(QMainWindow):
         self.main = main
         self.config = main.config
 
-        flags = Qt.WindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        flags = Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint
         self.setWindowFlags(flags)
 
         window_layout = QVBoxLayout()

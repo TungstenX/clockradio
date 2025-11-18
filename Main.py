@@ -1,8 +1,7 @@
 import configparser
 import json
-
 import vlc
-from PyQt5.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication
 from TimeWindow import TimeWindow
 from RadioWindow import RadioWindow
 from pathlib import Path
@@ -156,4 +155,4 @@ if __name__ == "__main__":
     main.set_radio_window(radio_window)
     radio_window.show()
     
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

@@ -1,10 +1,10 @@
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QPixmap, QIcon
 import requests
 import datetime
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QPixmap, QIcon
+from PyQt6.QtWidgets import QMainWindow, QWidget, QLabel, QHBoxLayout, QPushButton, QDockWidget, QVBoxLayout, \
+    QProgressBar
 from dateutil import parser
-
 from weather.WeatherCode import TimeOfDay, decode_weather_for_tod
 
 # TODO:
@@ -30,7 +30,7 @@ class TimeWindow(QMainWindow):
         self.main = main
         self.config = main.config
 
-        flags = Qt.WindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        flags = Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint
         self.setWindowFlags(flags)
 
         self.init_vars()
