@@ -1,7 +1,6 @@
 import configparser
 import json
 import vlc
-from PyQt6.QtGui import QGuiApplication
 from PyQt6.QtWidgets import QApplication
 from TimeWindow import TimeWindow
 from RadioWindow import RadioWindow
@@ -139,25 +138,11 @@ class Main:
 
 if __name__ == "__main__":
     import sys
-
-
-    if QGuiApplication.primaryScreen() is None:
-        print("Headless / no graphical environment")
-        #sys.exit(-1)
-    else:
-        print("Graphical environment available")
-
-    appGui = QGuiApplication(sys.argv)
-
-    if not appGui.primaryScreen():
-        print("Headless")
-    else:
-        print("GUI available")
-
     import os
     headless = os.environ.get("DISPLAY") is None and os.environ.get("WAYLAND_DISPLAY") is None
-    print("Is headless = " + str(headless))
-
+    if headless:
+        print("App can't run in headless mode")
+        sys.exit(-1)
 
     app = QApplication(sys.argv)
     main = Main()
