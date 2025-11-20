@@ -1,6 +1,7 @@
 import configparser
 import json
 import vlc
+from PyQt6.QtGui import QGuiApplication
 from PyQt6.QtWidgets import QApplication
 from TimeWindow import TimeWindow
 from RadioWindow import RadioWindow
@@ -141,6 +142,12 @@ if __name__ == "__main__":
     main = Main()
 
     app = QApplication(sys.argv)
+    if QGuiApplication.primaryScreen() is None:
+        print("Headless / no graphical environment")
+        sys.exit(-1)
+    else:
+        print("Graphical environment available")
+
     app.setStyleSheet(stylesheet)
 
     time_window = TimeWindow(main)

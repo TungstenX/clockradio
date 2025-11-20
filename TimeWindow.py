@@ -1,3 +1,5 @@
+import sys
+
 import requests
 import datetime
 from PyQt6.QtCore import Qt, QTimer
@@ -59,9 +61,21 @@ class TimeWindow(QMainWindow):
         main_layout.addWidget(self.minute_2, 2)
 
         # Other button
-        clock_button = QPushButton(self)
-        clock_button.setIcon(QIcon("res/bt_radio.png"))
-        clock_button.clicked.connect(self.show_radio)
+        radio_button = QPushButton(self)
+        radio_button.setIcon(QIcon("res/bt_radio.png"))
+        radio_button.clicked.connect(self.show_radio)
+
+        details_button = QPushButton(self)
+        details_button.setIcon(QIcon("res/bt_details.png"))
+        details_button.clicked.connect(self.toggle_detail_display)
+
+        alarm_button = QPushButton(self)
+        alarm_button.setIcon(QIcon("res/bt_alarm.png"))
+        alarm_button.clicked.connect(self.show_alarm)
+
+        exit_button = QPushButton(self)
+        exit_button.setIcon(QIcon("res/bt_exit.png"))
+        exit_button.clicked.connect(self.do_exit)
 
         # Date
         self.dock_bottom = QDockWidget()
@@ -73,7 +87,10 @@ class TimeWindow(QMainWindow):
         bottom_layout.setContentsMargins(9, 0, 9, 3)
         date_widget.setLayout(bottom_layout)
 
-        bottom_layout.addWidget(clock_button,1, Qt.AlignmentFlag.AlignLeft)
+        bottom_layout.addWidget(details_button, 1, Qt.AlignmentFlag.AlignLeft)
+        bottom_layout.addWidget(radio_button, 1, Qt.AlignmentFlag.AlignLeft)
+        bottom_layout.addWidget(alarm_button, 1, Qt.AlignmentFlag.AlignLeft)
+        bottom_layout.addWidget(exit_button, 1, Qt.AlignmentFlag.AlignLeft)
 
         self.dow_1 = QLabel()
         self.dow_2 = QLabel()
@@ -236,7 +253,7 @@ class TimeWindow(QMainWindow):
 
         self.dock_left.setWidget(self.weather_widget)
         if not self.config.get('Clock', 'show_details'):
-            self.dock_bottom.setVisible(False)
+            # self.dock_bottom.setVisible(False)
             self.dock_top.setVisible(False)
             self.dock_left.setVisible(False)
 
@@ -250,10 +267,18 @@ class TimeWindow(QMainWindow):
     def show_radio(self):
         self.main.show_radio_wind()
 
+    def show_alarm(self):
+        pass
+
     def toggle_detail_display(self):
-        self.dock_bottom.setVisible(not self.dock_bottom.isVisible())
+        # self.dock_bottom.setVisible(not self.dock_bottom.isVisible())
         self.dock_top.setVisible(not self.dock_top.isVisible())
         self.dock_left.setVisible(not self.dock_left.isVisible())
+        self.config.set('Clock', 'show_details', str(self.dock_top.isVisible()))
+        self.main.write_config()
+
+    def do_exit(self):
+        sys.exit()
 
     def make_time_ui(self, label_1: QLabel, label_2: QLabel, label_3: QLabel, label_4: QLabel, sun_layout: QHBoxLayout):
 
@@ -635,7 +660,7 @@ class TimeWindow(QMainWindow):
             current_cond = data["current"]["condition"]["code"]
             if (self.current_sunrise + datetime.timedelta(hours=1)).time() >= dt_now.time() >= (
                     self.current_sunrise - datetime.timedelta(
-                    hours=1)).time():  # sunrise is from an hour before and after sunrise
+                hours=1)).time():  # sunrise is from an hour before and after sunrise
                 tod = TimeOfDay.SUNRISE
             elif (self.current_sunrise + datetime.timedelta(hours=1)).time() < dt_now.time() < (
                     self.current_sunset - datetime.timedelta(hours=1)).time():
