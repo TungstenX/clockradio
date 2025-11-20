@@ -63,11 +63,11 @@ def decode_weather_for_tod(code: int, tod: TimeOfDay):
                               MAX_DAY_LRAIN, MAX_NIGHT_CLOUDY, MAX_NIGHT_CLOUDY, tod)
         case 1087 | 1273 | 1276 | 1279 | 1282 | 1117:
             # Thunder
-            return get_by_time_of_day("bg_day_thunder", "bg_day_thunder", "night_thunder", "night_thunder", MAX_DAY_THUNDER,
+            return get_by_time_of_day("bg_day_thunder", "bg_day_thunder", "bg_night_thunder", "bg_night_thunder", MAX_DAY_THUNDER,
                               MAX_DAY_THUNDER, MAX_NIGHT_THUNDER, MAX_NIGHT_THUNDER, tod)
         case 1186 | 1189 | 1192 | 1195 | 1201 | 1207 | 1216 | 1243 | 1246:
             # Rain
-            return get_by_time_of_day("bg_day_rain", "bg_day_rain", "night_rain", "night_rain", MAX_DAY_RAIN,
+            return get_by_time_of_day("bg_day_rain", "bg_day_rain", "bg_night_rain", "bg_night_rain", MAX_DAY_RAIN,
                               MAX_DAY_RAIN, MAX_NIGHT_RAIN, MAX_NIGHT_RAIN, tod)
         case _:
             return get_by_time_of_day("bg_sunrise", "bg_day_clear", "bg_sunset", "bg_night_clear", MAX_SUNRISE,

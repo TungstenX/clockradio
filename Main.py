@@ -139,14 +139,29 @@ class Main:
 
 if __name__ == "__main__":
     import sys
+
+
     if QGuiApplication.primaryScreen() is None:
         print("Headless / no graphical environment")
-        sys.exit(-1)
+        #sys.exit(-1)
     else:
         print("Graphical environment available")
-    main = Main()
+
+    appGui = QGuiApplication(sys.argv)
+
+    if not appGui.primaryScreen():
+        print("Headless")
+    else:
+        print("GUI available")
+
+    import os
+    headless = os.environ.get("DISPLAY") is None and os.environ.get("WAYLAND_DISPLAY") is None
+    print("Is headless = " + str(headless))
+
 
     app = QApplication(sys.argv)
+    main = Main()
+
 
     app.setStyleSheet(stylesheet)
 
