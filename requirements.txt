@@ -1,0 +1,6 @@
+python-vlc>=3.0.21203
+PyQt6>=6.10.0
+PyQt6-Qt6>=6.10.0
+PyQt6_sip>=13.10.2
+requests>=2.32.5
+python-dateutil>=2.9.0
