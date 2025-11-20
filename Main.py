@@ -139,14 +139,14 @@ class Main:
 
 if __name__ == "__main__":
     import sys
-    main = Main()
-
-    app = QApplication(sys.argv)
     if QGuiApplication.primaryScreen() is None:
         print("Headless / no graphical environment")
         sys.exit(-1)
     else:
         print("Graphical environment available")
+    main = Main()
+
+    app = QApplication(sys.argv)
 
     app.setStyleSheet(stylesheet)
 
