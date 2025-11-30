@@ -1,5 +1,6 @@
 info.txt
 __pycache__
-weather/__pycache__
+spi_app/weather/__pycache__
 .idea
+test1.bmp
 .venv

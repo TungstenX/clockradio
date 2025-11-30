@@ -1,6 +1,8 @@
 from enum import Enum
 import random
 
+from spi_app.ui.UIUtil import UIUtil
+
 
 class TimeOfDay(Enum):
     SUNRISE = 1
@@ -43,7 +45,47 @@ def get_by_time_of_day(prefix_sunrise, prefix_day, prefix_sunset, prefix_night, 
             return prefix_night + str(get_random(max_night)) + ".png"
 
 class WeatherCode:
-    pass
+    def __init__(self, home_dir):
+        super().__init__()
+        self.ui_util = UIUtil(home_dir)
+
+    def get_by_time_of_day(self, sunrise, day, sunset, night, tod: TimeOfDay):
+            match tod:
+                case TimeOfDay.SUNRISE:
+                    return self.ui_util.get_bg_path(sunrise)
+                case TimeOfDay.DAY:
+                    return self.ui_util.get_bg_path(day)
+                case TimeOfDay.SUNSET:
+                    return self.ui_util.get_bg_path(sunset)
+                case TimeOfDay.NIGHT:
+                    return self.ui_util.get_bg_path(night)
+
+    def decode_weather_for_tod(self, code: int, tod: TimeOfDay):
+        match code:
+            case 1000:
+                # "day" : "Sunny",
+                # "night" : "Clear",
+                return self.get_by_time_of_day("sunrise", "day_clear", "sunset", "night_clear", tod)
+            case 1003:
+                # "day" : "Partly cloudy",
+                # "night" : "Partly cloudy",
+                return self.get_by_time_of_day("sunrise", "day_cloudy", "sunset", "night_pcloudy", tod)
+
+            case 1006 | 1009 | 1030 | 1063 | 1066 | 1069 | 1072 | 1135 | 1147 | 1150 | 1153 | 1168 | 1171 | 1180 | 1198 | 1204 | 1183 | 1213 | 1210 | 1240:
+                # Overcast, Mist, Cloudy, Patchy rain possible
+                return self.get_by_time_of_day("day_lrain", "day_lrain", "night_cloudy", "night_cloudy", tod)
+
+            case 1087 | 1273 | 1276 | 1279 | 1282 | 1117:
+                # Thunder
+                return self.get_by_time_of_day("day_thunder", "day_thunder", "night_thunder", "night_thunder", tod)
+
+            case 1186 | 1189 | 1192 | 1195 | 1201 | 1207 | 1216 | 1243 | 1246:
+                # Rain
+                return self.get_by_time_of_day("day_rain", "day_rain", "night_rain", "night_rain", tod)
+
+            case _:
+                return self.get_by_time_of_day("sunrise", "day_clear", "sunset", "night_clear", tod)
+
 # https://www.weatherapi.com/docs/weather_conditions.json
 def decode_weather_for_tod(code: int, tod: TimeOfDay):
     match code:

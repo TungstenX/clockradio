@@ -7,7 +7,7 @@ from PyQt6.QtGui import QPixmap, QIcon
 from PyQt6.QtWidgets import QMainWindow, QWidget, QLabel, QHBoxLayout, QPushButton, QDockWidget, QVBoxLayout, \
     QProgressBar
 from dateutil import parser
-from weather.WeatherCode import TimeOfDay, decode_weather_for_tod
+from spi_app.weather.WeatherCode import TimeOfDay, decode_weather_for_tod
 
 # TODO:
 

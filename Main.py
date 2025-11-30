@@ -2,8 +2,10 @@ import configparser
 import json
 import vlc
 from PyQt6.QtWidgets import QApplication
-from TimeWindow import TimeWindow
+
 from RadioWindow import RadioWindow
+from TimeWindow import TimeWindow
+from spi_app.SPIWindow import SPIWindow
 from pathlib import Path
 
 W_HEIGHT = 320
@@ -70,11 +72,14 @@ class Main:
             ],
             "current_channel": 0
         }
+        self.config['Weather'] = {
+            "api_key": "0bea637c931042fbbe0211531251311"
+        }
 
         config_file = Path("config.ini")
         if not config_file.exists():
             self.write_config()
-        #self.write_config()
+        # self.write_config()
         self.read_config()
 
         self.player = vlc.MediaPlayer()
@@ -139,27 +144,36 @@ class Main:
 if __name__ == "__main__":
     import sys
     import os
+
     headless = os.environ.get("DISPLAY") is None and os.environ.get("WAYLAND_DISPLAY") is None
     if headless:
         print("App can't run in headless mode")
         sys.exit(-1)
 
-    app = QApplication(sys.argv)
+    home_dir = os.path.dirname(__file__)
+
     main = Main()
+    # If headless
+    start_headless = False
+    if len(sys.argv) > 1:
+        print(sys.argv[1])
+        start_headless = bool(sys.argv[1])
+    if start_headless:
+        spiMain = SPIWindow(main, home_dir)
+    else:
+        app = QApplication(sys.argv)
+        app.setStyleSheet(stylesheet)
 
+        time_window = TimeWindow(main)
+        time_window.resize(W_WIDTH, W_HEIGHT)
+        time_window.setGeometry(0, 0, W_WIDTH, W_HEIGHT)
+        main.set_time_window(time_window)
+        time_window.show()
 
-    app.setStyleSheet(stylesheet)
+        radio_window = RadioWindow(main)
+        radio_window.resize(W_WIDTH, W_HEIGHT)
+        radio_window.setGeometry(0, 0, W_WIDTH, W_HEIGHT)
+        main.set_radio_window(radio_window)
+        #radio_window.show()
 
-    time_window = TimeWindow(main)
-    time_window.resize(W_WIDTH, W_HEIGHT)
-    time_window.setGeometry(0, 0, W_WIDTH, W_HEIGHT)
-    main.set_time_window(time_window)
-    # self.time_window.show()
-
-    radio_window = RadioWindow(main)
-    radio_window.resize(W_WIDTH, W_HEIGHT)
-    radio_window.setGeometry(0, 0, W_WIDTH, W_HEIGHT)
-    main.set_radio_window(radio_window)
-    radio_window.show()
-    
-    sys.exit(app.exec())
+        sys.exit(app.exec())
