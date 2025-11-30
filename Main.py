@@ -145,10 +145,10 @@ if __name__ == "__main__":
     import sys
     import os
 
-    headless = os.environ.get("DISPLAY") is None and os.environ.get("WAYLAND_DISPLAY") is None
-    if headless:
-        print("App can't run in headless mode")
-        sys.exit(-1)
+    # headless = os.environ.get("DISPLAY") is None and os.environ.get("WAYLAND_DISPLAY") is None
+    # if headless:
+    #     print("App can't run in headless mode")
+    #     sys.exit(-1)
 
     home_dir = os.path.dirname(__file__)
 
