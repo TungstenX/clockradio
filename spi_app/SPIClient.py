@@ -12,8 +12,8 @@ SPI_DEVICE = 0
 SPI_MAX_HZ = 48000000  # try high, reduce if unstable
 
 # Set your display size here (common: 320x480 or 480x320)
-WIDTH = 480
-HEIGHT = 320
+WIDTH = 320
+HEIGHT = 480
 # ============================
 
 # ------- pack RGB888 -> RGB666 bytes -------
