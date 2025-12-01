@@ -1,9 +1,7 @@
 import datetime
 from typing import Any
-
 from spi_app.ui.UIUtil import UIUtil
 from spi_app.weather.WeatherClient import WeatherClientCR
-
 
 class TimeUtilsCR:
     def __init__(self, main, home_dir):

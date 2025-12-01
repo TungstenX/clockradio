@@ -1,5 +1,4 @@
 # AI Generate code
-
 import time
 import spidev
 import pigpio

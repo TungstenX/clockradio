@@ -1,8 +1,6 @@
 import os
 import random
-
 from PIL import Image
-
 
 class ProgressBarDataCR:
     def __init__(self):

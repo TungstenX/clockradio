@@ -1,8 +1,6 @@
 import datetime
-
 import requests
 from dateutil import parser
-
 from spi_app.ui.UIUtil import ProgressBarDataCR
 from spi_app.weather.WeatherCode import TimeOfDay
 

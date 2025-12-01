@@ -7,3 +7,4 @@ python-dateutil>=2.9.0
 spidev>=3.8
 pillow>=12.0.0
 pigpio>=1.78
+interval-timer>=1.0.0

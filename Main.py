@@ -165,7 +165,10 @@ if __name__ == "__main__":
         arguments, values = getopt.getopt(args, options, long_options)
         for currentArg, currentVal in arguments:
             if currentArg in ("-h", "--Help"):
-                print("Showing Help")
+                print("Usage:")
+                print("\tHeadless:  python Main.py -l")
+                print("\tTest mode: python Main.py -t")
+                print("\tHeadless, test mode: python Main.py -l -t")
             else:
                 if currentArg in ("-l", "--headLess", "--Headless"):
                     print("Running as headless")
