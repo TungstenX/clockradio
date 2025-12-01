@@ -8,10 +8,10 @@
     player.play()
 
     # keep your program alive while it's playing
-    import time
+    import time_util
 
     while True:
-        time.sleep(1)
+        time_util.sleep(1)
 """
 import json
 from PyQt6.QtCore import Qt

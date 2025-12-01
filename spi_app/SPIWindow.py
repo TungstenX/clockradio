@@ -1,19 +1,20 @@
 import spidev
 from PIL import Image
 
-from spi_app.time.TimeUtilsCR import TimeUtilsCR
+from spi_app.SPIClient import SPIClient
+from spi_app.time_util.TimeUtilsCR import TimeUtilsCR
 from spi_app.ui.UIUtil import UIUtil
 from spi_app.weather.WeatherCode import WeatherCode, TimeOfDay
 
-DIGIT_SIZE_MEDIUM = (30, 40)
-DIGIT_SIZE_SMALL = (15, 20)
-DIGIT_SIZE_X_SMALL = (7, 10)
-COLON_SIZE_MEDIUM = (6, 20)
+DIGIT_SIZE_MEDIUM = (40, 30)
+DIGIT_SIZE_SMALL = (20, 15)
+DIGIT_SIZE_X_SMALL = (10, 7)
+COLON_SIZE_MEDIUM = (20, 6)
 BUTTON_SIZE = (30, 30)
 
 
 class SPIWindow:
-    def __init__(self, main, home_dir):
+    def __init__(self, main, home_dir, start_test_mode):
         super().__init__()
 
         self.main = main
@@ -22,6 +23,9 @@ class SPIWindow:
 
         self.time_util = TimeUtilsCR(self.main, home_dir)
         self.ui_util = UIUtil(self.home_dir)
+        self.spi_client = None
+        if not start_test_mode:
+            self.spi_client = SPIClient()
 
         self.xy_moon = None
         self.xy_sun = None
@@ -80,51 +84,50 @@ class SPIWindow:
         self.last_update_day = None
 
         # Time:
-        self.xy_time_date = [(102, 120), (168, 120), (252, 120), (318, 120), (295, 275), (330, 275)]
-        self.xy_time_colon = (234, 120)
+        # [(102, 120), (168, 120), (252, 120), (318, 120), (295, 275), (330, 275)]
+        self.xy_time_date = [(120, 102), (120, 168), (120, 252), (120, 318), (275, 295), (275, 330)]
+        self.xy_time_colon = (120, 234)
 
         self.xy_rise_set = {
             "sun": {
-                "rise": [(10, 5), (28, 5), (55, 5), (73, 5)],
-                "set": [(397, 5), (415, 5), (442, 5), (460, 5)]
+                "rise": [(5, 10), (5, 28), (5, 55), (5, 73)],
+                "set": [(5, 397), (5, 415), (5, 442), (5, 460)]
             },
             "moon": {
-                "rise": [(10, 28), (28, 28), (55, 28), (73, 28)],
-                "set": [(397, 28), (415, 28), (442, 28), (460, 28)]
+                "rise": [(28, 10), (28, 28), (28, 55), (28, 73)],
+                "set": [(28, 397), (28, 415), (28, 442), (28, 460)]
             },
-            "colon": [(46, 5), (433, 5), (46, 28), (433, 28)]
+            "colon": [(5, 46), (5, 433), (28, 46), (28, 433)]
         }
 
         # Sun / Moon bar:
-        self.xy_sun_bar = (94, 5)
-        self.xy_moon_bar = (94, 28)
+        self.xy_sun_bar = (5, 94)
+        self.xy_moon_bar = (28, 94)
 
         # Date:
-        # self.xy_date1 = (295, 275)  # 87
-        # self.xy_date2 = (330, 275)
-        self.xy_day = [(370, 275), (405, 275), (440, 275)]
+        self.xy_day = [(275, 370), (275, 405), (275, 440)]
 
         # Button:
-        self.xy_button1 = (10, 285)
-        self.xy_button2 = (45, 285)
-        self.xy_button3 = (80, 285)
-        self.xy_button4 = (115, 285)
+        self.xy_button1 = (285, 10)
+        self.xy_button2 = (285, 45)
+        self.xy_button3 = (285, 80)
+        self.xy_button4 = (285, 115)
 
         # Min max
         self.xy_min_max = {
             "today": {
-                "min": [(10, 120), (28, 120), (46, 120), (64, 120), (73, 120)],
-                "max": [(10, 143), (28, 143), (46, 143), (64, 143), (73, 143)]
+                "min": [(166, 10), (166, 28), (166, 46), (166, 64), (166, 73)],
+                "max": [(143, 10), (143, 28), (143, 46), (143, 64), (143, 73)]
             },
             "tomorrow": {
-                "min": [(397, 120), (415, 120), (433, 120), (451, 120), (460, 120)],
-                "max": [(397, 143), (415, 143), (433, 143), (451, 143), (460, 143)]
+                "min": [(166, 397), (166, 415), (166, 433), (166, 451), (166, 460)],
+                "max": [(143, 397), (143, 415), (143, 433), (143, 451), (143, 460)]
             }
         }
         # Rain
         self.xy_rain = {
-            "today": [(10, 166), (28, 166)],
-            "tomorrow": [(442, 166), (460, 166)]
+            "today": [(120, 10), (120, 28)],
+            "tomorrow": [(120, 442), (120, 460)]
         }
 
         self.button_alarm = self.ui_util.buttons["alarm"].resize(BUTTON_SIZE)
@@ -144,6 +147,10 @@ class SPIWindow:
         self.render()
         self.bg_pix.save('test1.bmp')
 
+    def close(self):
+        if not self.spi_client is None:
+            self.spi_client.close()
+
     def render(self):
         if self.which_window == 0:
             self.bg_pix = Image.open(self.bg_file)
@@ -159,33 +166,10 @@ class SPIWindow:
                 # Min max temps + rain
                 self.render_min_max()
 
-        self.write_to_spi()
-
-    def write_to_spi(self):
-        buf = bytearray()
-        width, height = self.bg_pix.size
-        rgb_screen_img = self.bg_pix.convert("RGB").load()
-        for y in range(height):
-            for x in range(width):
-                r, g, b = rgb_screen_img[x, y]
-
-                # Convert 8-bit RGB → 6-bit R/G/B
-                r6 = r >> 2
-                g6 = g >> 2
-                b6 = b >> 2
-
-                # ILI9488 expects 3 bytes per pixel: R, G, B (each 6-bit in top bits)
-                buf.append(r6)
-                buf.append(g6)
-                buf.append(b6)
-
-        spi = spidev.SpiDev()
-        spi.open(0, 0)
-        spi.max_speed_hz = 32000000  # depends on your screen
-
-        spi.writebytes(buf)
-
-        #bg.tobytes("raw")
+        if not self.spi_client is None:
+            self.spi_client.output_image(self.bg_pix)
+        else:
+            print("spi_client could not init or running in test mode")
 
     def render_sun_moon(self):
         for sm in ["sun", "moon"]:
@@ -208,15 +192,15 @@ class SPIWindow:
             self.bg_pix.paste(self.sun_bar, self.xy_sun_bar, mask=self.sun_bar)
             width, height = self.sun_bar.size
             img_w, img_h = self.sun.size
-            x = (width * (1 - self.time_util.weather_client.progress_bar_sun.get_factor())) - (img_w / 2)
+            y = (height * (1 - self.time_util.weather_client.progress_bar_sun.get_factor())) - (img_h / 2)
             # print("Sun factor 1-: " + str(1 - self.time_util.weather_client.progress_bar_sun.get_factor()))
-            # print("Sun width:     " + str(width))
-            # print("Sun x:         " + str(x))
-            if int(x) < 0:
-                x = 0
-            elif int(x + img_w) > width:
-                x = width - img_w
-            self.xy_sun = (int(94 + x), 5)
+            # print("Sun height:     " + str(height))
+            # print("Sun y:         " + str(y))
+            if int(y) < 0:
+                y = 0
+            elif int(y + img_h) > height:
+                y = height - img_h
+            self.xy_sun = (5, int(94 + y))
             self.bg_pix.paste(self.sun, self.xy_sun, mask=self.sun)
         elif not self.time_util.weather_client.forecast["today"]["sun"]["is_up"]:
             self.bg_pix.paste(self.moon_bar, self.xy_sun_bar, mask=self.moon_bar)
@@ -227,18 +211,12 @@ class SPIWindow:
             "is_up"] and self.time_util.weather_client.progress_bar_moon.is_valid() and not self.moon is None:
             width, height = self.moon_bar.size
             img_w, img_h = self.moon.size
-            x = (width * (1 - self.time_util.weather_client.progress_bar_moon.get_factor())) - (img_w / 2)
-            if int(x) < 0:
-                x = 0
-            elif int(x + img_w) > width:
-                x = width - img_w
-            self.xy_moon = (int(94 + x), 5)
-            self.bg_pix.paste(self.moon, self.xy_moon, mask=self.moon)
-
-            width, height = self.moon_bar.size
-            self.xy_moon = (
-                (94 + width) - int((width - 20) * self.time_util.weather_client.progress_bar_moon.get_factor()),
-                28)
+            y = (height * (1 - self.time_util.weather_client.progress_bar_moon.get_factor())) - (img_h / 2)
+            if int(y) < 0:
+                y = 0
+            elif int(y + img_h) > height:
+                y = height - img_h
+            self.xy_moon = (5, int(94 + y))
             self.bg_pix.paste(self.moon, self.xy_moon, mask=self.moon)
 
     def render_buttons(self):
@@ -296,7 +274,7 @@ class SPIWindow:
 
     def update_astro(self):
         if self.time_util.can_update_astro():
-            self.time_util.weather_client.fetch_weather()  # TDOD Move to time
+            self.time_util.weather_client.fetch_weather()  # TDOD Move to time_util
             self.bg_file = self.weather_code.decode_weather_for_tod(self.time_util.weather_client.current_cond,
                                                                     self.time_util.weather_client.tod)
             # Get moon phase

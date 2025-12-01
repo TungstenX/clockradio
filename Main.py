@@ -1,4 +1,5 @@
 import configparser
+import getopt
 import json
 import vlc
 from PyQt6.QtWidgets import QApplication
@@ -153,13 +154,32 @@ if __name__ == "__main__":
     home_dir = os.path.dirname(__file__)
 
     main = Main()
-    # If headless
+
+    args = sys.argv[1:]
+    options = "hlt"
+    long_options = ["Help", "headLess", "Test"]
+
     start_headless = False
-    if len(sys.argv) > 1:
-        print(sys.argv[1])
-        start_headless = bool(sys.argv[1])
+    start_test_mode = False
+    try:
+        arguments, values = getopt.getopt(args, options, long_options)
+        for currentArg, currentVal in arguments:
+            if currentArg in ("-h", "--Help"):
+                print("Showing Help")
+            else:
+                if currentArg in ("-l", "--headLess", "--Headless"):
+                    print("Running as headless")
+                    start_headless = True
+                if currentArg in ("-t", "--Test"):
+                    print("Running in Test mode")
+                    start_test_mode = True
+    except getopt.error as err:
+        print(str(err))
+
+    # If headless
     if start_headless:
-        spiMain = SPIWindow(main, home_dir)
+        spiMain = SPIWindow(main, home_dir, start_test_mode)
+        spiMain.close()
     else:
         app = QApplication(sys.argv)
         app.setStyleSheet(stylesheet)
