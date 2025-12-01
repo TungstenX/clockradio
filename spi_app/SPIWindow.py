@@ -1,6 +1,5 @@
+import datetime
 from enum import Enum
-
-import spidev
 from PIL import Image
 from interval_timer import IntervalTimer
 
@@ -297,7 +296,9 @@ class SPIWindow:
         self.render()
 
     def update_time_date(self):
-        self.time_date = self.time_util.get_time_parts()
+        dt = datetime.datetime.now()
+        print("update_time_date: " + str(dt.minute))
+        self.time_date = self.time_util.get_time_parts(dt)
 
         self.time_date[4] = self.time_date[4].resize(DIGIT_SIZE_MEDIUM)
         self.time_date[5] = self.time_date[5].resize(DIGIT_SIZE_MEDIUM)

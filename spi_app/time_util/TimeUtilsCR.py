@@ -11,8 +11,7 @@ class TimeUtilsCR:
         self.ui_util = UIUtil(home_dir)
         self.weather_client = WeatherClientCR(main)
 
-
-    def get_time_parts(self, dt = datetime.datetime.now()) -> list[Any]:
+    def get_time_parts(self, dt) -> list[Any]:
         hour = dt.hour
         minute = dt.minute
         print("Hour's minute:" + str(minute))
