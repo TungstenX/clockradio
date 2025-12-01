@@ -7,6 +7,7 @@ from PIL import Image
 # ========== CONFIG ==========
 PIN_DC     = 25        # BCM GPIO for D/C (Data/Command)
 PIN_RESET  = 24     # BCM GPIO for RESET
+PIN_CS     = 8
 SPI_BUS    = 0
 SPI_DEVICE = 0
 SPI_MAX_HZ = 48000000  # try high, reduce if unstable
@@ -52,6 +53,7 @@ class SPIClient:
         self.spi.mode = 0b00
         self.pi.set_mode(PIN_DC, pigpio.OUTPUT)
         self.pi.set_mode(PIN_RESET, pigpio.OUTPUT)
+        self.pi.set_mode(PIN_CS, pigpio.OUTPUT)
         self.ili_init()
 
     def gpio_write(self, pin, level):
@@ -74,6 +76,7 @@ class SPIClient:
 
     def send_data_bytes(self, bts):
         self.set_dc(True)
+        self.gpio_write(PIN_CS, 0)
         # bts is bytes or list of ints; send in chunks to avoid huge allocations
         CHUNK = 4096
         if isinstance(bts, bytes):
@@ -83,6 +86,8 @@ class SPIClient:
         else:
             for i in range(0, len(bts), CHUNK):
                 self.spi.xfer2(bts[i:i+CHUNK])
+
+        self.gpio_write(PIN_CS, 1)
 
     # ------- ILI9488 init (minimal, common sequence) -------
     def ili_init(self):

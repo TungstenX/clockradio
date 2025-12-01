@@ -62,7 +62,7 @@ class SPIWindow:
 
         self.init(home_dir, start_test_mode)
 
-        count = 5
+        count = 10
         for interval in IntervalTimer(20):
             print(interval)
             self.update()

@@ -15,6 +15,7 @@ class TimeUtilsCR:
     def get_time_parts(self, dt = datetime.datetime.now()) -> list[Any]:
         hour = dt.hour
         minute = dt.minute
+        print("Hour's minute:" + str(minute))
         hour_ones = hour % 10
         hour_tens = (hour % 100) // 10
         minute_ones = minute % 10
