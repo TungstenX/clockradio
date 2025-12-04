@@ -4,10 +4,15 @@ import spidev
 import pigpio
 from PIL import Image
 
+import event_emitter as events
+
+em = events.EventEmitter()
 # ========== CONFIG ==========
-PIN_DC     = 25        # BCM GPIO for D/C (Data/Command)
-PIN_RESET  = 24     # BCM GPIO for RESET
-PIN_CS     = 8
+GPIO_DC    = 25     # BCM GPIO for D/C (Data/Command)
+GPIO_RESET = 24     # BCM GPIO for RESET
+GPIO_CS    = 8
+GPIO_TIRQ  = 17
+GPIO_TCS   = 27
 SPI_BUS    = 0
 SPI_DEVICE = 0
 SPI_MAX_HZ = 48000000  # try high, reduce if unstable
@@ -20,7 +25,7 @@ HEIGHT = 480
 # ------- pack RGB888 -> RGB666 bytes -------
 def rgb888_to_rgb666_bytes(image: Image.Image):
     """
-    Accepts a Pillow RGB image sized WIDTHxHEIGHT.
+    Accepts a Pillow RGB image sized WIDTH x HEIGHT.
     Returns bytes arranged as [R6,G6,B6, R6,G6,B6, ...] where R6=R>>2
     """
     w, h = image.size
@@ -51,23 +56,56 @@ class SPIClient:
         self.spi.open(SPI_BUS, SPI_DEVICE)
         self.spi.max_speed_hz = SPI_MAX_HZ
         self.spi.mode = 0b00
-        self.pi.set_mode(PIN_DC, pigpio.OUTPUT)
-        self.pi.set_mode(PIN_RESET, pigpio.OUTPUT)
-        self.pi.set_mode(PIN_CS, pigpio.OUTPUT)
+        self.pi.set_mode(GPIO_DC, pigpio.OUTPUT)
+        self.pi.set_mode(GPIO_RESET, pigpio.OUTPUT)
+        self.pi.set_mode(GPIO_CS, pigpio.OUTPUT)
         self.ili_init()
+
+        self.pi.set_mode(GPIO_TIRQ, pigpio.INPUT)
+        self.pi.set_pull_up_down(GPIO_TIRQ, pigpio.PUD_UP)
+
+        self.pi.set_mode(GPIO_TCS, pigpio.OUTPUT)
+        self.pi.write(GPIO_TCS, 1)
+
+        # Register interrupt callback
+        self.cb = self.pi.callback(GPIO_TIRQ, pigpio.FALLING_EDGE, self.irq_callback)
+
+    def read_coord(self, cmd):
+        # Send command + read two bytes
+        self.pi.write(GPIO_TCS, 0)
+        _, data = self.pi.spi_xfer(self.spi, [cmd, 0, 0])
+        self.pi.write(GPIO_TCS, 1)
+
+        # 12-bit result (top aligned)
+        value = ((data[1] << 8) | data[2]) >> 3
+        return value
+
+    def read_touch(self):
+        # Read coordinates as long as pen is touching
+        while self.pi.read(GPIO_TIRQ) == 0:
+            x = self.read_coord(0x90)  # X position command
+            y = self.read_coord(0xD0)  # Y position command
+            print("Touch:", x, y)
+            em.emit('touch', x=x, y=y)
+            time.sleep(0.02)
+
+    # IRQ callback
+    def irq_callback(self, gpio, level, tick):
+        if level == 0:  # FALLING = touch start
+            self.read_touch()
 
     def gpio_write(self, pin, level):
         self.pi.write(pin, 1 if level else 0)
 
     def hw_reset(self):
-        self.gpio_write(PIN_RESET, 0)
+        self.gpio_write(GPIO_RESET, 0)
         time.sleep(0.05)
-        self.gpio_write(PIN_RESET, 1)
+        self.gpio_write(GPIO_RESET, 1)
         time.sleep(0.15)
 
     # DC: 0 = command, 1 = data (we'll call set_dc(0/1))
     def set_dc(self, is_data: bool):
-        self.gpio_write(PIN_DC, 1 if is_data else 0)
+        self.gpio_write(GPIO_DC, 1 if is_data else 0)
 
     def send_cmd(self, cmd):
         self.set_dc(False)
@@ -76,7 +114,7 @@ class SPIClient:
 
     def send_data_bytes(self, bts):
         self.set_dc(True)
-        self.gpio_write(PIN_CS, 0)
+        self.gpio_write(GPIO_CS, 0)
         # bts is bytes or list of ints; send in chunks to avoid huge allocations
         CHUNK = 4096
         if isinstance(bts, bytes):
@@ -87,7 +125,7 @@ class SPIClient:
             for i in range(0, len(bts), CHUNK):
                 self.spi.xfer2(bts[i:i+CHUNK])
 
-        self.gpio_write(PIN_CS, 1)
+        self.gpio_write(GPIO_CS, 1)
 
     # ------- ILI9488 init (minimal, common sequence) -------
     def ili_init(self):
@@ -139,3 +177,4 @@ class SPIClient:
     def close(self):
         self.spi.close()
         self.pi.stop()
+        self.cb.cancel()

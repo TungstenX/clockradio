@@ -1,6 +1,7 @@
 import os
 import random
 from PIL import Image
+from playsound import playsound
 
 class ProgressBarDataCR:
     def __init__(self):
@@ -80,6 +81,9 @@ class UIUtil:
                            "H": self.pix_let_H, "I": self.pix_let_I, "M": self.pix_let_M, "N": self.pix_let_N,
                            "O": self.pix_let_O, "R": self.pix_let_R, "S": self.pix_let_S, "T": self.pix_let_T,
                            "U": self.pix_let_U, "V": self.pix_let_V, "W": self.pix_let_W}
+
+        self.pix_percentage = Image.open(os.path.join(home_dir, "res/percentage.png"))
+
         self.bg = {"day_clear": [os.path.join(home_dir, "res/bg_day_clear1.png"),
                                  os.path.join(home_dir, "res/bg_day_clear2.png"),
                                  os.path.join(home_dir, "res/bg_day_clear3.png"),
@@ -111,7 +115,7 @@ class UIUtil:
                                   os.path.join(home_dir, "res/bg_night_rain4.png")],
                    "night_thunder": [os.path.join(home_dir, "res/bg_night_thunder1.png"),
                                      os.path.join(home_dir, "res/bg_night_thunder2.png")],
-                   "radio": [os.path.join(home_dir, "res/bg_radio.png")],
+                   "radio": os.path.join(home_dir, "res/bg_radio.png"),
                    "sunrise": [os.path.join(home_dir, "res/bg_sunrise1.png"),
                                os.path.join(home_dir, "res/bg_sunrise2.png"),
                                os.path.join(home_dir, "res/bg_sunrise3.png"),
@@ -120,13 +124,16 @@ class UIUtil:
                               os.path.join(home_dir, "res/bg_sunset2.png"),
                               os.path.join(home_dir, "res/bg_sunset3.png"),
                               os.path.join(home_dir, "res/bg_sunset4.png")]}
-
+        self.fg_frame = Image.open(os.path.join(home_dir, "res/fg_frame.png"))
         self.buttons = {
             "alarm": Image.open(os.path.join(home_dir, "res/bt_alarm.png")),
             "clock": Image.open(os.path.join(home_dir, "res/bt_clock.png")),
             "details": Image.open(os.path.join(home_dir, "res/bt_details.png")),
             "exit": Image.open(os.path.join(home_dir, "res/bt_exit.png")),
-            "radio": Image.open(os.path.join(home_dir, "res/bt_radio.png"))
+            "radio": Image.open(os.path.join(home_dir, "res/bt_radio.png")),
+            "play": Image.open(os.path.join(home_dir, "res/bt_radio_play_off.png")),
+            "station 1": Image.open(os.path.join(home_dir, "res/bt_radio_station_left_off.png")),
+            "station 2": Image.open(os.path.join(home_dir, "res/bt_radio_station_right_off.png"))
         }
 
         self.moon_phases = {
@@ -148,6 +155,8 @@ class UIUtil:
             "moon_bar": Image.open(os.path.join(home_dir, "res/moon_bar.png"))
         }
 
+        self.sound_button = os.path.join(home_dir, "res/button-press.mp3")
+
     def get_bg_path(self, name: str):
         if name in self.bg:
             try:
@@ -157,3 +166,6 @@ class UIUtil:
             except:
                 print("Could not get random background for " + name)
         return self.bg["day_clear"][0]
+
+    def press_button(self):
+        playsound(self.sound_button)

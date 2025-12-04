@@ -2,8 +2,10 @@ import datetime
 from enum import Enum
 from PIL import Image
 from interval_timer import IntervalTimer
+import event_emitter as events
 
 from spi_app.SPIClient import SPIClient
+from spi_app.radio.RadioClient import RadioClient
 from spi_app.time_util.TimeUtilsCR import TimeUtilsCR
 from spi_app.ui.UIUtil import UIUtil
 from spi_app.weather.WeatherCode import WeatherCode, TimeOfDay
@@ -14,10 +16,13 @@ DIGIT_SIZE_X_SMALL = (10, 7)
 COLON_SIZE_MEDIUM = (20, 6)
 BUTTON_SIZE = (30, 30)
 
+em = events.EventEmitter()
+
 class ActiveWindow(Enum):
     CLOCK = 0
     ALARM = 1
-    RAIO  = 2
+    RADIO = 2
+
 
 class SPIWindow:
     def __init__(self, main, home_dir, start_test_mode):
@@ -25,6 +30,7 @@ class SPIWindow:
 
         self.main = main
         self.home_dir = home_dir
+        self.radio_client = RadioClient()
 
         self.xy_moon = None
         self.xy_sun = None
@@ -54,10 +60,14 @@ class SPIWindow:
         self.xy_rise_set = None
         self.xy_time_colon = None
         self.xy_time_date = None
+        self.x_offset_sun_moon = None
+        self.y_offset_sun_moon = None
+        self.xy_radio_button = None
         self.spi_client = None
         self.ui_util = None
         self.time_util = None
         self.which_window = None
+        self.spi_client = None
 
         self.init(home_dir, start_test_mode)
 
@@ -76,62 +86,95 @@ class SPIWindow:
             self.spi_client.close()
 
     def init(self, home_dir, start_test_mode):
+        y_offset_mid = 18
+        y_offset_buttons = 33
+        x_offset_buttons = 23
+        y_offset_dow = 33
+        x_offset_dow = 23
+        self.y_offset_sun_moon = 33
+        self.x_offset_sun_moon = 23
+
         self.which_window = ActiveWindow.CLOCK  # 0 Clock, 1 = Alarm, 2 = Radio
 
         self.time_util = TimeUtilsCR(self.main, home_dir)
         self.ui_util = UIUtil(self.home_dir)
-        self.spi_client = None
         if not start_test_mode:
-            self.spi_client = SPIClient()
+            self.spi_client = SPIClient()  # self
+
         # Time:
-        # [(102, 120), (168, 120), (252, 120), (318, 120), (295, 275), (330, 275)]
-        self.xy_time_date = [(120, 102), (120, 168), (120, 252), (120, 318), (275, 295), (275, 330)]
+        self.xy_time_date = [(120, 102), (120, 168), (120, 252), (120, 318),
+                             (275 - x_offset_dow, 295 - y_offset_dow), (275 - x_offset_dow, 330 - y_offset_dow)]
         self.xy_time_colon = (120, 234)
 
         self.xy_rise_set = {
             "sun": {
-                "rise": [(5, 10), (5, 28), (5, 55), (5, 73)],
-                "set": [(5, 397), (5, 415), (5, 442), (5, 460)]
+                "rise": [(5 + self.x_offset_sun_moon, 10 + self.y_offset_sun_moon),
+                         (5 + self.x_offset_sun_moon, 28 + self.y_offset_sun_moon),
+                         (5 + self.x_offset_sun_moon, 55 + self.y_offset_sun_moon),
+                         (5 + self.x_offset_sun_moon, 73 + self.y_offset_sun_moon)],
+                "set": [(5 + self.x_offset_sun_moon, 392 - self.y_offset_sun_moon),
+                        (5 + self.x_offset_sun_moon, 410 - self.y_offset_sun_moon),
+                        (5 + self.x_offset_sun_moon, 437 - self.y_offset_sun_moon),
+                        (5 + self.x_offset_sun_moon, 455 - self.y_offset_sun_moon)]
             },
             "moon": {
-                "rise": [(28, 10), (28, 28), (28, 55), (28, 73)],
-                "set": [(28, 397), (28, 415), (28, 442), (28, 460)]
+                "rise": [(28 + self.x_offset_sun_moon, 10 + self.y_offset_sun_moon),
+                         (28 + self.x_offset_sun_moon, 28 + self.y_offset_sun_moon),
+                         (28 + self.x_offset_sun_moon, 55 + self.y_offset_sun_moon),
+                         (28 + self.x_offset_sun_moon, 73 + self.y_offset_sun_moon)],
+                "set": [(28 + self.x_offset_sun_moon, 392 - self.y_offset_sun_moon),
+                        (28 + self.x_offset_sun_moon, 410 - self.y_offset_sun_moon),
+                        (28 + self.x_offset_sun_moon, 437 - self.y_offset_sun_moon),
+                        (28 + self.x_offset_sun_moon, 455 - self.y_offset_sun_moon)]
             },
-            "colon": [(5, 46), (5, 433), (28, 46), (28, 433)]
+            "colon": [(5 + self.x_offset_sun_moon, 46 + self.y_offset_sun_moon),
+                      (5 + self.x_offset_sun_moon, 427 - self.y_offset_sun_moon),
+                      (28 + self.x_offset_sun_moon, 46 + self.y_offset_sun_moon),
+                      (28 + self.x_offset_sun_moon, 427 - self.y_offset_sun_moon)]
         }
 
         # Sun / Moon bar:
-        self.xy_sun_bar = (5, 94)
-        self.xy_moon_bar = (28, 94)
+        self.xy_sun_bar = (5 + self.x_offset_sun_moon, 94 + self.y_offset_sun_moon)
+        self.xy_moon_bar = (28 + self.x_offset_sun_moon, 94 + self.y_offset_sun_moon)
 
         # Date:
-        self.xy_day = [(275, 370), (275, 405), (275, 440)]
+        self.xy_day = [(275 - x_offset_dow, 370 - y_offset_dow), (275 - x_offset_dow, 405 - y_offset_dow),
+                       (275 - x_offset_dow, 440 - y_offset_dow)]
 
         # Min max
         self.xy_min_max = {
             "today": {
-                "min": [(166, 10), (166, 28), (166, 46), (166, 64), (166, 73)],
-                "max": [(143, 10), (143, 28), (143, 46), (143, 64), (143, 73)]
+                "min": [(166, y_offset_mid + 10), (166, y_offset_mid + 28), (166, y_offset_mid + 46),
+                        (166, y_offset_mid + 64), (166, y_offset_mid + 73)],
+                "max": [(143, y_offset_mid + 10), (143, y_offset_mid + 28), (143, y_offset_mid + 46),
+                        (143, y_offset_mid + 64), (143, y_offset_mid + 73)]
             },
             "tomorrow": {
-                "min": [(166, 397), (166, 415), (166, 433), (166, 451), (166, 460)],
-                "max": [(143, 397), (143, 415), (143, 433), (143, 451), (143, 460)]
+                "min": [(166, 397 - y_offset_mid), (166, 415 - y_offset_mid), (166, 433 - y_offset_mid),
+                        (166, 451 - y_offset_mid), (166, 460 - y_offset_mid)],
+                "max": [(143, 397 - y_offset_mid), (143, 415 - y_offset_mid), (143, 433 - y_offset_mid),
+                        (143, 451 - y_offset_mid), (143, 460 - y_offset_mid)]
             }
         }
         # Rain
         self.xy_rain = {
-            "today": [(120, 10), (120, 28)],
-            "tomorrow": [(120, 442), (120, 460)]
+            "today": [(120, y_offset_mid + 28), (120, y_offset_mid + 46), (120, y_offset_mid + 64)],
+            "tomorrow": [(120, 415 - y_offset_mid), (120, 433 - y_offset_mid), (120, 451 - y_offset_mid)]
         }
 
         # Button:
         self.xy_button = {
-            "alarm": (285, 10),
-            "clock": (285, 45),
-            "details": (285, 80),
-            "exit": (285, 115),
-            "radio": (285, 45),
-            }
+            "alarm": (285 - x_offset_buttons, y_offset_buttons + 10),
+            "clock": (146, 50),
+            "details": (285 - x_offset_buttons, y_offset_buttons + 80),
+            "exit": (285 - x_offset_buttons, y_offset_buttons + 115),
+            "radio": (285 - x_offset_buttons, y_offset_buttons + 45)
+        }
+        self.xy_radio_button = {
+            "play": (127, 205),
+            "station 1": (246, 88),
+            "station 2": (248, 355)
+        }
         self.button = {
             "alarm": self.ui_util.buttons["alarm"].resize(BUTTON_SIZE),
             "clock": self.ui_util.buttons["clock"].resize(BUTTON_SIZE),
@@ -177,23 +220,35 @@ class SPIWindow:
             }
         }
         self.rain_pix = {
-            "today": [None, None],
-            "tomorrow": [None, None]
+            "today": [None, None, None],
+            "tomorrow": [None, None, None]
         }
 
     def render(self):
         self.bg_pix = Image.open(self.bg_file)
 
+        # Buttons
+        self.render_buttons()
+
         if self.which_window == ActiveWindow.CLOCK:
             # Date and Time
             self.render_date_time()
-            # Buttons
-            self.render_buttons()
             if self.main.config.get('Clock', 'show_details'):
                 # Sunrise/set Moonrise/set and progress
                 self.render_sun_moon()
                 # Min max temps + rain
                 self.render_min_max()
+            self.bg_pix.paste(self.ui_util.fg_frame, (0, 0), mask=self.ui_util.fg_frame)
+        elif self.which_window == ActiveWindow.RADIO:
+            if not self.radio_client.play:
+                self.bg_pix.paste(self.ui_util.buttons["play"], self.xy_radio_button["play"],
+                                  mask=self.ui_util.buttons["play"])
+            if self.radio_client.station == 1:
+                self.bg_pix.paste(self.ui_util.buttons["station 2"], self.xy_radio_button["station 2"],
+                                  mask=self.ui_util.buttons["station 2"])
+            else:
+                self.bg_pix.paste(self.ui_util.buttons["station 1"], self.xy_radio_button["station 1"],
+                                  mask=self.ui_util.buttons["station 1"])
 
         if not self.spi_client is None:
             self.spi_client.output_image(self.bg_pix)
@@ -230,7 +285,7 @@ class SPIWindow:
                 y = 0
             elif int(y + img_h) > height:
                 y = height - img_h
-            self.xy_sun = (5, int(94 + y))
+            self.xy_sun = (5 + self.x_offset_sun_moon, int(94 + y) + self.y_offset_sun_moon)
             self.bg_pix.paste(self.sun, self.xy_sun, mask=self.sun)
         elif not self.time_util.weather_client.forecast["today"]["sun"]["is_up"]:
             self.bg_pix.paste(self.moon_bar, self.xy_sun_bar, mask=self.moon_bar)
@@ -246,12 +301,12 @@ class SPIWindow:
                 y = 0
             elif int(y + img_h) > height:
                 y = height - img_h
-            self.xy_moon = (28, int(94 + y))
+            self.xy_moon = (28 + self.x_offset_sun_moon, int(94 + y) + self.y_offset_sun_moon)
             self.bg_pix.paste(self.moon, self.xy_moon, mask=self.moon)
 
     def render_buttons(self):
-        self.bg_pix.paste(self.button["exit"], self.xy_button["exit"], mask=self.button["exit"])
         if self.which_window == ActiveWindow.CLOCK:
+            self.bg_pix.paste(self.button["exit"], self.xy_button["exit"], mask=self.button["exit"])
             self.bg_pix.paste(self.button["radio"], self.xy_button["radio"], mask=self.button["radio"])
             self.bg_pix.paste(self.button["alarm"], self.xy_button["alarm"], mask=self.button["alarm"])
             self.bg_pix.paste(self.button["details"], self.xy_button["details"], mask=self.button["details"])
@@ -291,13 +346,13 @@ class SPIWindow:
         if self.which_window == ActiveWindow.CLOCK:
             self.update_time_date()
             self.update_astro()
-        elif self.which_window == ActiveWindow.RAIO:
+        elif self.which_window == ActiveWindow.RADIO:
             self.bg_file = self.ui_util.bg["radio"]
         self.render()
 
     def update_time_date(self):
         dt = datetime.datetime.now()
-        print("update_time_date: " + str(dt.minute))
+        # print("update_time_date: " + str(dt.minute))
         self.time_date = self.time_util.get_time_parts(dt)
 
         self.time_date[4] = self.time_date[4].resize(DIGIT_SIZE_MEDIUM)
@@ -399,3 +454,51 @@ class SPIWindow:
 
         pix_a[0] = self.ui_util.pix_nums[int(str_min[0])].resize(DIGIT_SIZE_SMALL)
         pix_a[1] = self.ui_util.pix_nums[int(str_min[1])].resize(DIGIT_SIZE_SMALL)
+        pix_a[2] = self.ui_util.pix_percentage.resize(DIGIT_SIZE_SMALL)
+
+    @events.on(emitter=em, event='touch')
+    def touch(self, x: int, y: int):
+        if self.which_window == ActiveWindow.CLOCK:
+            button_name = "exit"
+            if self.xy_button[button_name][0] <= x <= (
+                    self.xy_button[button_name][0] + self.button[button_name].size[0]):
+                if self.xy_button[button_name][1] <= y <= (
+                        self.xy_button[button_name][1] + self.button[button_name].size[1]):
+                    print("Exit touched")  # TODO Exit app
+
+            button_name = "radio"
+            if self.xy_button[button_name][0] <= x <= (
+                    self.xy_button[button_name][0] + self.button[button_name].size[0]):
+                if self.xy_button[button_name][1] <= y <= (
+                        self.xy_button[button_name][1] + self.button[button_name].size[1]):
+                    print("Radio touched")  # TODO Show radio window
+                    # self.which_window = ActiveWindow.RADIO
+                    self.render()
+
+            button_name = "alarm"
+            if self.xy_button[button_name][0] <= x <= (
+                    self.xy_button[button_name][0] + self.button[button_name].size[0]):
+                if self.xy_button[button_name][1] <= y <= (
+                        self.xy_button[button_name][1] + self.button[button_name].size[1]):
+                    print("Alarm touched")  # TODO Show radio window
+                    # self.which_window = ActiveWindow.ALARM
+                    self.render()
+
+            button_name = "details"
+            if self.xy_button[button_name][0] <= x <= (
+                    self.xy_button[button_name][0] + self.button[button_name].size[0]):
+                if self.xy_button[button_name][1] <= y <= (
+                        self.xy_button[button_name][1] + self.button[button_name].size[1]):
+                    print("Details touched")  # TODO Toggle details
+                    self.main.config.set("Clock", "show_details", not self.main.config.get("Clock", "show_details"))
+                    self.render()
+
+        if self.which_window == ActiveWindow.RADIO:
+            button_name = "clock"
+            if self.xy_button[button_name][0] <= x <= (
+                    self.xy_button[button_name][0] + self.button[button_name].size[0]):
+                if self.xy_button[button_name][1] <= y <= (
+                        self.xy_button[button_name][1] + self.button[button_name].size[1]):
+                    print("Clock touched")  # TODO Show clock window
+                    # self.which_window = ActiveWindow.CLOCK
+                    self.render()

@@ -142,6 +142,10 @@ class Main:
         self.radio_window.show()
         self.time_window.hide()
 
+    def touch(self, x, y):
+        pass
+
+
 if __name__ == "__main__":
     import sys
     import os
