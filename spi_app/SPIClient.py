@@ -58,8 +58,8 @@ class SPIClient:
         # self.spi = spidev.SpiDev()
         self.spi = self.pi.spi_open(SPI_BUS, 2000000, 0)
         print("SPI HANDLE:", self.spi, type(self.spi))
-        self.spi.max_speed_hz = SPI_MAX_HZ
-        self.spi.mode = 0b00
+        # self.spi.max_speed_hz = SPI_MAX_HZ
+        # self.spi.mode = 0b00
         self.pi.set_mode(GPIO_DC, pigpio.OUTPUT)
         self.pi.set_mode(GPIO_RESET, pigpio.OUTPUT)
         self.pi.set_mode(GPIO_LCD_CS, pigpio.OUTPUT)
