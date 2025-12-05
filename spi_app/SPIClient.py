@@ -1,11 +1,12 @@
 # AI Generate code
+import event_emitter as events
 import threading
 import time
 import spidev
 import pigpio
 from PIL import Image
 
-import event_emitter as events
+spi_lock = threading.Lock()
 
 em = events.EventEmitter()
 # ========== CONFIG ==========
@@ -76,8 +77,10 @@ class SPIClient:
         self.event_emitter = event_m
 
     def read_coord(self, cmd):
-        # assumes CS is already LOW
-        _, data = self.pi.spi_xfer(self.spi, [cmd, 0, 0])
+        with spi_lock:
+            self.pi.write(GPIO_TCS, 0)
+            _, data = self.pi.spi_xfer(self.spi, bytes([cmd, 0, 0]))
+            self.pi.write(GPIO_TCS, 1)
         value = ((data[1] << 8) | data[2]) >> 3
         return value
 
