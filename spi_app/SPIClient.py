@@ -57,6 +57,7 @@ class SPIClient:
 
         self.spi = spidev.SpiDev()
         self.spi.open(SPI_BUS, SPI_DEVICE)
+        print("SPI HANDLE:", self.spi, type(self.spi))
         self.spi.max_speed_hz = SPI_MAX_HZ
         self.spi.mode = 0b00
         self.pi.set_mode(GPIO_DC, pigpio.OUTPUT)
