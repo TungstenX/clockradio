@@ -1,4 +1,5 @@
 # AI Generate code
+import threading
 import time
 import spidev
 import pigpio
@@ -8,11 +9,12 @@ import event_emitter as events
 
 em = events.EventEmitter()
 # ========== CONFIG ==========
-GPIO_DC    = 25     # BCM GPIO for D/C (Data/Command)
-GPIO_RESET = 24     # BCM GPIO for RESET
-GPIO_CS    = 8
-GPIO_TIRQ  = 17
-GPIO_TCS   = 27
+GPIO_DC       = 25     # BCM GPIO for D/C (Data/Command)
+GPIO_RESET    = 24     # BCM GPIO for RESET
+GPIO_LCD_CS   = 8
+GPIO_TOUCH_CS = 7
+GPIO_TIRQ     = 17
+GPIO_TCS      = 27
 SPI_BUS    = 0
 SPI_DEVICE = 0
 SPI_MAX_HZ = 48000000  # try high, reduce if unstable
@@ -44,7 +46,7 @@ def rgb888_to_rgb666_bytes(image: Image.Image):
 
 
 class SPIClient:
-    def __init__(self, em):
+    def __init__(self, event_m):
         super().__init__()
 
         # ------- helpers for SPI/GPIO -------
@@ -58,7 +60,8 @@ class SPIClient:
         self.spi.mode = 0b00
         self.pi.set_mode(GPIO_DC, pigpio.OUTPUT)
         self.pi.set_mode(GPIO_RESET, pigpio.OUTPUT)
-        self.pi.set_mode(GPIO_CS, pigpio.OUTPUT)
+        self.pi.set_mode(GPIO_LCD_CS, pigpio.OUTPUT)
+        self.pi.set_mode(GPIO_TOUCH_CS, pigpio.OUTPUT)
         self.ili_init()
 
         self.pi.set_mode(GPIO_TIRQ, pigpio.INPUT)
@@ -68,32 +71,41 @@ class SPIClient:
         self.pi.write(GPIO_TCS, 1)
 
         # Register interrupt callback
+        self.reading = False
         self.cb = self.pi.callback(GPIO_TIRQ, pigpio.FALLING_EDGE, self.irq_callback)
-        self.em = em
+        self.event_emitter = event_m
 
     def read_coord(self, cmd):
-        # Send command + read two bytes
-        self.pi.write(GPIO_TCS, 0)
+        # assumes CS is already LOW
         _, data = self.pi.spi_xfer(self.spi, [cmd, 0, 0])
-        self.pi.write(GPIO_TCS, 1)
-
-        # 12-bit result (top aligned)
         value = ((data[1] << 8) | data[2]) >> 3
         return value
 
-    def read_touch(self):
-        # Read coordinates as long as pen is touching
-        while self.pi.read(GPIO_TIRQ) == 0:
-            x = self.read_coord(0x90)  # X position command
-            y = self.read_coord(0xD0)  # Y position command
-            print("Touch:", x, y)
-            self.em.emit('touch', x=x, y=y)
-            time.sleep(0.02)
+    def read_touch_worker(self):
+        self.reading = True
+        try:
+            # keep reading while pen touches screen
+            while self.pi.read(GPIO_TIRQ) == 0:
+                self.pi.write(GPIO_TOUCH_CS, 0)
+
+                x = self.read_coord(0x90)  # X command
+                y = self.read_coord(0xD0)  # Y command
+
+                self.pi.write(GPIO_TOUCH_CS, 1)
+                print("Touch:", x, y)
+                self.event_emitter.emit('touch', x=x, y=y)
+
+                time.sleep(0.02)
+        finally:
+            self.reading = False
 
     # IRQ callback
     def irq_callback(self, gpio, level, tick):
-        if level == 0:  # FALLING = touch start
-            self.read_touch()
+        if level == 0 and not self.reading:
+            # launch worker thread
+            threading.Thread(target=self.read_touch_worker, daemon=True).start()
+            # FALLING = touch start
+            # self.read_touch()
 
     def gpio_write(self, pin, level):
         self.pi.write(pin, 1 if level else 0)
@@ -115,7 +127,7 @@ class SPIClient:
 
     def send_data_bytes(self, bts):
         self.set_dc(True)
-        self.gpio_write(GPIO_CS, 0)
+        self.gpio_write(GPIO_LCD_CS, 0)
         # bts is bytes or list of ints; send in chunks to avoid huge allocations
         CHUNK = 4096
         if isinstance(bts, bytes):
@@ -126,7 +138,7 @@ class SPIClient:
             for i in range(0, len(bts), CHUNK):
                 self.spi.xfer2(bts[i:i+CHUNK])
 
-        self.gpio_write(GPIO_CS, 1)
+        self.gpio_write(GPIO_LCD_CS, 1)
 
     # ------- ILI9488 init (minimal, common sequence) -------
     def ili_init(self):

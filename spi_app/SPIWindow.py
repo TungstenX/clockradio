@@ -25,15 +25,12 @@ class ActiveWindow(Enum):
 
 
 class SPIWindow:
-    def __init__(self, main, home_dir, start_test_mode, em):
+    def __init__(self, main, home_dir, start_test_mode):
         super().__init__()
 
         self.main = main
         self.home_dir = home_dir
-        self.em = em
-
-        self.em.on('touch', self.touch)
-        self.radio_client = RadioClient()
+        self.event_emitter = main.em
 
         self.xy_moon = None
         self.xy_sun = None
@@ -66,11 +63,11 @@ class SPIWindow:
         self.x_offset_sun_moon = None
         self.y_offset_sun_moon = None
         self.xy_radio_button = None
-        self.spi_client = None
         self.ui_util = None
         self.time_util = None
         self.which_window = None
         self.spi_client = None
+        self.radio_client = None
 
         self.init(home_dir, start_test_mode)
 
@@ -102,7 +99,7 @@ class SPIWindow:
         self.time_util = TimeUtilsCR(self.main, home_dir)
         self.ui_util = UIUtil(self.home_dir)
         if not start_test_mode:
-            self.spi_client = SPIClient()  # self
+            self.spi_client = SPIClient(self.event_emitter)  # self
 
         # Time:
         self.xy_time_date = [(120, 102), (120, 168), (120, 252), (120, 318),
@@ -226,6 +223,9 @@ class SPIWindow:
             "today": [None, None, None],
             "tomorrow": [None, None, None]
         }
+
+        self.event_emitter.on('touch', self.touch)
+        self.radio_client = RadioClient()
 
     def render(self):
         self.bg_pix = Image.open(self.bg_file)
