@@ -3,6 +3,7 @@ import getopt
 import json
 import vlc
 from PyQt6.QtWidgets import QApplication
+import event_emitter as events
 
 from RadioWindow import RadioWindow
 from TimeWindow import TimeWindow
@@ -36,8 +37,6 @@ stylesheet = """
 """
 
 #TODO:
-# Tomorrow's forcast
-# Moon phase
 # Do wind
 # Alarm Window
 class Main:
@@ -49,6 +48,7 @@ class Main:
         self.log_level = None
         self.debug_mode = None
         self.config = configparser.ConfigParser()
+        self.em = events.EventEmitter()
 
         # Add sections and key-value pairs
         self.config['General'] = {

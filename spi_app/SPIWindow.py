@@ -25,11 +25,14 @@ class ActiveWindow(Enum):
 
 
 class SPIWindow:
-    def __init__(self, main, home_dir, start_test_mode):
+    def __init__(self, main, home_dir, start_test_mode, em):
         super().__init__()
 
         self.main = main
         self.home_dir = home_dir
+        self.em = em
+
+        self.em.on('touch', self.touch)
         self.radio_client = RadioClient()
 
         self.xy_moon = None
@@ -456,8 +459,8 @@ class SPIWindow:
         pix_a[1] = self.ui_util.pix_nums[int(str_min[1])].resize(DIGIT_SIZE_SMALL)
         pix_a[2] = self.ui_util.pix_percentage.resize(DIGIT_SIZE_SMALL)
 
-    @events.on(emitter=em, event='touch')
     def touch(self, x: int, y: int):
+        print(f"SPIWindow Touched {x}{y}")
         if self.which_window == ActiveWindow.CLOCK:
             button_name = "exit"
             if self.xy_button[button_name][0] <= x <= (

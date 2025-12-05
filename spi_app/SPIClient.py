@@ -44,7 +44,7 @@ def rgb888_to_rgb666_bytes(image: Image.Image):
 
 
 class SPIClient:
-    def __init__(self):
+    def __init__(self, em):
         super().__init__()
 
         # ------- helpers for SPI/GPIO -------
@@ -69,6 +69,7 @@ class SPIClient:
 
         # Register interrupt callback
         self.cb = self.pi.callback(GPIO_TIRQ, pigpio.FALLING_EDGE, self.irq_callback)
+        self.em = em
 
     def read_coord(self, cmd):
         # Send command + read two bytes
@@ -86,7 +87,7 @@ class SPIClient:
             x = self.read_coord(0x90)  # X position command
             y = self.read_coord(0xD0)  # Y position command
             print("Touch:", x, y)
-            em.emit('touch', x=x, y=y)
+            self.em.emit('touch', x=x, y=y)
             time.sleep(0.02)
 
     # IRQ callback
