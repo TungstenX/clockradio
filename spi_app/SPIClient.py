@@ -55,8 +55,8 @@ class SPIClient:
         if not self.pi.connected:
             raise SystemExit("pigpio daemon not running. Start with: sudo pigpiod")
 
-        self.spi = spidev.SpiDev()
-        self.spi.open(SPI_BUS, SPI_DEVICE)
+        # self.spi = spidev.SpiDev()
+        self.spi = self.pi.spi_open(SPI_BUS, 2000000, 0)
         print("SPI HANDLE:", self.spi, type(self.spi))
         self.spi.max_speed_hz = SPI_MAX_HZ
         self.spi.mode = 0b00
