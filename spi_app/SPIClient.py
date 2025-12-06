@@ -133,15 +133,20 @@ class SPIClient:
     def send_data_bytes(self, bts):
         self.set_dc(True)
         self.gpio_write(GPIO_LCD_CS, 0)
-        # bts is bytes or list of ints; send in chunks to avoid huge allocations
-        CHUNK = 4096
-        if isinstance(bts, bytes):
-            view = memoryview(bts)
-            for i in range(0, len(view), CHUNK):
-                self.spi_display.xfer2(list(view[i:i+CHUNK]))
-        else:
-            for i in range(0, len(bts), CHUNK):
-                self.spi_display.xfer2(bts[i:i+CHUNK])
+        try:
+            # bts is bytes or list of ints; send in chunks to avoid huge allocations
+            CHUNK = 4096
+            if isinstance(bts, bytes):
+                view = memoryview(bts)
+                for i in range(0, len(view), CHUNK):
+                    self.spi_display.xfer2(list(view[i:i+CHUNK]))
+            else:
+                for i in range(0, len(bts), CHUNK):
+                    self.spi_display.xfer2(bts[i:i+CHUNK])
+        except TimeoutError:
+            print("Time out error while send data bytes")
+        except:
+            print("Error while send data bytes")
 
         self.gpio_write(GPIO_LCD_CS, 1)
 
@@ -194,6 +199,28 @@ class SPIClient:
 
     def close(self):
         self.spi_display.close()
-        self.spi_touch.close()
+        # self.spi_touch.close()
         self.pi.stop()
         self.cb.cancel()
+
+        """
+        Traceback (most recent call last):
+  File "/home/pi/Apps/venv/clockradio/Main.py", line 188, in <module>
+    spiMain = SPIWindow(main, home_dir, start_test_mode)
+  File "/home/pi/Apps/venv/clockradio/spi_app/SPIWindow.py", line 77, in __init__
+    self.update()
+    ~~~~~~~~~~~^^
+  File "/home/pi/Apps/venv/clockradio/spi_app/SPIWindow.py", line 354, in update
+    self.render()
+    ~~~~~~~~~~~^^
+  File "/home/pi/Apps/venv/clockradio/spi_app/SPIWindow.py", line 257, in render
+    self.spi_client.output_image(self.bg_pix)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/home/pi/Apps/venv/clockradio/spi_app/SPIClient.py", line 192, in output_image
+    self.send_data_bytes(data)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/home/pi/Apps/venv/clockradio/spi_app/SPIClient.py", line 141, in send_data_bytes
+    self.spi_display.xfer2(list(view[i:i+CHUNK]))
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+TimeoutError: [Errno 110] Connection timed out
+        """

@@ -7,6 +7,7 @@ import event_emitter as events
 from spi_app.SPIClient import SPIClient
 from spi_app.radio.RadioClient import RadioClient
 from spi_app.time_util.TimeUtilsCR import TimeUtilsCR
+from spi_app.ui.MSP3520 import MSP3520
 from spi_app.ui.UIUtil import UIUtil
 from spi_app.weather.WeatherCode import WeatherCode, TimeOfDay
 
@@ -17,6 +18,7 @@ COLON_SIZE_MEDIUM = (20, 6)
 BUTTON_SIZE = (30, 30)
 
 em = events.EventEmitter()
+
 
 class ActiveWindow(Enum):
     CLOCK = 0
@@ -68,6 +70,7 @@ class SPIWindow:
         self.which_window = None
         self.spi_client = None
         self.radio_client = None
+        self.msp = None
 
         self.init(home_dir, start_test_mode)
 
@@ -224,6 +227,7 @@ class SPIWindow:
             "tomorrow": [None, None, None]
         }
 
+        self.msp = MSP3520()
         self.event_emitter.on('touch', self.touch)
         self.radio_client = RadioClient()
 
@@ -460,37 +464,39 @@ class SPIWindow:
         pix_a[2] = self.ui_util.pix_percentage.resize(DIGIT_SIZE_SMALL)
 
     def touch(self, x: int, y: int):
-        print(f"SPIWindow Touched {x}{y}")
+        print(f"SPIWindow Touched in {x},{y}")
+        mapped_x, mapped_y = self.msp.map(x, y)
+        print(f"SPIWindow Touched mapped {mapped_x},{mapped_y}")
         if self.which_window == ActiveWindow.CLOCK:
             button_name = "exit"
-            if self.xy_button[button_name][0] <= x <= (
+            if self.xy_button[button_name][0] <= mapped_x <= (
                     self.xy_button[button_name][0] + self.button[button_name].size[0]):
-                if self.xy_button[button_name][1] <= y <= (
+                if self.xy_button[button_name][1] <= mapped_y <= (
                         self.xy_button[button_name][1] + self.button[button_name].size[1]):
                     print("Exit touched")  # TODO Exit app
 
             button_name = "radio"
-            if self.xy_button[button_name][0] <= x <= (
+            if self.xy_button[button_name][0] <= mapped_x <= (
                     self.xy_button[button_name][0] + self.button[button_name].size[0]):
-                if self.xy_button[button_name][1] <= y <= (
+                if self.xy_button[button_name][1] <= mapped_y <= (
                         self.xy_button[button_name][1] + self.button[button_name].size[1]):
                     print("Radio touched")  # TODO Show radio window
                     # self.which_window = ActiveWindow.RADIO
                     self.render()
 
             button_name = "alarm"
-            if self.xy_button[button_name][0] <= x <= (
+            if self.xy_button[button_name][0] <= mapped_x <= (
                     self.xy_button[button_name][0] + self.button[button_name].size[0]):
-                if self.xy_button[button_name][1] <= y <= (
+                if self.xy_button[button_name][1] <= mapped_y <= (
                         self.xy_button[button_name][1] + self.button[button_name].size[1]):
                     print("Alarm touched")  # TODO Show radio window
                     # self.which_window = ActiveWindow.ALARM
                     self.render()
 
             button_name = "details"
-            if self.xy_button[button_name][0] <= x <= (
+            if self.xy_button[button_name][0] <= mapped_x <= (
                     self.xy_button[button_name][0] + self.button[button_name].size[0]):
-                if self.xy_button[button_name][1] <= y <= (
+                if self.xy_button[button_name][1] <= mapped_y <= (
                         self.xy_button[button_name][1] + self.button[button_name].size[1]):
                     print("Details touched")  # TODO Toggle details
                     self.main.config.set("Clock", "show_details", not self.main.config.get("Clock", "show_details"))
@@ -498,9 +504,9 @@ class SPIWindow:
 
         if self.which_window == ActiveWindow.RADIO:
             button_name = "clock"
-            if self.xy_button[button_name][0] <= x <= (
+            if self.xy_button[button_name][0] <= mapped_x <= (
                     self.xy_button[button_name][0] + self.button[button_name].size[0]):
-                if self.xy_button[button_name][1] <= y <= (
+                if self.xy_button[button_name][1] <= mapped_y <= (
                         self.xy_button[button_name][1] + self.button[button_name].size[1]):
                     print("Clock touched")  # TODO Show clock window
                     # self.which_window = ActiveWindow.CLOCK
