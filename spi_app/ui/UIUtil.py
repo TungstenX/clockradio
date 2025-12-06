@@ -154,8 +154,11 @@ class UIUtil:
             "sun_bar": Image.open(os.path.join(home_dir, "res/sun_bar.png")),
             "moon_bar": Image.open(os.path.join(home_dir, "res/moon_bar.png"))
         }
+        self.pix_press_dot = Image.open(os.path.join(home_dir, "res/press_dot.png"))
 
+        #Audio
         self.sound_button = os.path.join(home_dir, "res/button-press.mp3")
+
 
     def get_bg_path(self, name: str):
         if name in self.bg:

@@ -1,5 +1,8 @@
+import time
+
 import event_emitter as events
 
+print(str(time.time()))
 
 class T1:
     def __init__(self, em):

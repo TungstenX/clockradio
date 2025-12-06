@@ -1,4 +1,6 @@
 import datetime
+import threading
+import time
 from enum import Enum
 from PIL import Image
 from interval_timer import IntervalTimer
@@ -18,7 +20,7 @@ COLON_SIZE_MEDIUM = (20, 6)
 BUTTON_SIZE = (30, 30)
 
 em = events.EventEmitter()
-
+press_lock = threading.Lock()
 
 class ActiveWindow(Enum):
     CLOCK = 0
@@ -71,6 +73,11 @@ class SPIWindow:
         self.spi_client = None
         self.radio_client = None
         self.msp = None
+        self.screen_pressed = False
+        self.timer_rerender_dot = None
+        self.screen_press_x = None
+        self.screen_press_y = None
+        self.last_press_time = None
 
         self.init(home_dir, start_test_mode)
 
@@ -256,6 +263,9 @@ class SPIWindow:
             else:
                 self.bg_pix.paste(self.ui_util.buttons["station 1"], self.xy_radio_button["station 1"],
                                   mask=self.ui_util.buttons["station 1"])
+
+        if self.screen_pressed:
+            self.bg_pix.paste(self.ui_util.pix_press_dot, (self.screen_press_x, self.screen_press_y), mask=self.ui_util.pix_press_dot)
 
         if not self.spi_client is None:
             self.spi_client.output_image(self.bg_pix)
@@ -463,10 +473,32 @@ class SPIWindow:
         pix_a[1] = self.ui_util.pix_nums[int(str_min[1])].resize(DIGIT_SIZE_SMALL)
         pix_a[2] = self.ui_util.pix_percentage.resize(DIGIT_SIZE_SMALL)
 
+    def process_dot(self, mapped_x = 0, mapped_y = 0):
+        if self.screen_pressed:
+            self.screen_pressed = False
+            if self.timer_rerender_dot and self.timer_rerender_dot.is_alive():
+                self.timer_rerender_dot.cancel()
+        else:
+            self.screen_pressed = True
+            self.screen_press_x = mapped_x
+            self.screen_press_y = mapped_y
+        self.render()
+
     def touch(self, x: int, y: int):
+        with press_lock:
+            tt = time.time() #nanoseconds
+            if self.last_press_time is None or self.last_press_time + 1000000000 <= tt: # 1000000000ns = 1s
+                self.last_press_time = tt + 1000000000
+            else:
+                return
         print(f"SPIWindow Touched in {x},{y}")
         mapped_x, mapped_y = self.msp.map(x, y)
         print(f"SPIWindow Touched mapped {mapped_x},{mapped_y}")
+
+        self.process_dot(mapped_x, mapped_y)
+        # Create a timer that will call timer_function after 3 seconds
+        self.timer_rerender_dot = threading.Timer(3, self.process_dot)
+
         if self.which_window == ActiveWindow.CLOCK:
             button_name = "exit"
             if self.xy_button[button_name][0] <= mapped_x <= (
