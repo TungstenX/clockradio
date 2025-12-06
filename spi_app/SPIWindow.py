@@ -488,8 +488,10 @@ class SPIWindow:
         with press_lock:
             tt = time.time() #nanoseconds
             if self.last_press_time is None or self.last_press_time + 1000000000 <= tt: # 1000000000ns = 1s
+                print("last press is None or not ready")
                 self.last_press_time = tt + 1000000000
             else:
+                print("Still busy")
                 return
         print(f"SPIWindow Touched in {x},{y}")
         mapped_x, mapped_y = self.msp.map(x, y)
