@@ -198,10 +198,16 @@ class SPIClient:
         print("Done.")
 
     def close(self):
+        # try:
         self.spi_display.close()
         # self.spi_touch.close()
+        if self.cb:
+            self.cb.cancel()
         self.pi.stop()
-        self.cb.cancel()
+        # except AttributeError:
+        #     print("Attribute error while closing spi")
+        # except:
+        #     print("Error while closing spi")
 
         """
         Traceback (most recent call last):

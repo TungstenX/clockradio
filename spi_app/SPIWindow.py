@@ -234,7 +234,7 @@ class SPIWindow:
             "tomorrow": [None, None, None]
         }
         self.screen_pressed = True
-        self.screen_press_x = 10
+        self.screen_press_x = 310
         self.screen_press_y = 10
         self.msp = MSP3520()
         self.event_emitter.on('touch', self.touch)

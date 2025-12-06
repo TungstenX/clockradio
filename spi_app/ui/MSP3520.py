@@ -7,7 +7,23 @@ BR = (300, 300)
 class MSP3520:
     def __init__(self):
         super().__init__()
-
+        """
+        BL
+        |disp_x|disp_y|touch_x|touch_y|        
+        | 0    | 0    | 3800  | 300   |
+        
+        BR
+        |disp_x|disp_y|touch_x|touch_y|        
+        | 0    | 480  | 300   | 300   |
+        
+        TL
+        |disp_x|disp_y|touch_x|touch_y|        
+        | 0    | 0    | 3800  | 300   |
+        
+        BR
+        |disp_x|disp_y|touch_x|touch_y|        
+        | 0    | 480  | 300   | 300   |
+        """
         self.x_min = min(TL[0], BL[0])
         self.x_max = max(TR[0], BR[0])
 
