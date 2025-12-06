@@ -7,6 +7,7 @@ BR = (300, 300)
 class MSP3520:
     def __init__(self):
         super().__init__()
+
         self.x_min = min(TL[0], BL[0])
         self.x_max = max(TR[0], BR[0])
 

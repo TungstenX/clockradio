@@ -233,7 +233,9 @@ class SPIWindow:
             "today": [None, None, None],
             "tomorrow": [None, None, None]
         }
-
+        self.screen_pressed = True
+        self.screen_press_x = 10
+        self.screen_press_y = 10
         self.msp = MSP3520()
         self.event_emitter.on('touch', self.touch)
         self.radio_client = RadioClient()
@@ -265,7 +267,7 @@ class SPIWindow:
                                   mask=self.ui_util.buttons["station 1"])
 
         if self.screen_pressed:
-            self.bg_pix.paste(self.ui_util.pix_press_dot, (self.screen_press_x, self.screen_press_y), mask=self.ui_util.pix_press_dot)
+            self.bg_pix.paste(self.ui_util.pix_press_dot, (self.screen_press_x - 10, self.screen_press_y - 10), mask=self.ui_util.pix_press_dot)
 
         if not self.spi_client is None:
             self.spi_client.output_image(self.bg_pix)
@@ -533,7 +535,8 @@ class SPIWindow:
                 if self.xy_button[button_name][1] <= mapped_y <= (
                         self.xy_button[button_name][1] + self.button[button_name].size[1]):
                     print("Details touched")  # TODO Toggle details
-                    self.main.config.set("Clock", "show_details", not self.main.config.get("Clock", "show_details"))
+                    show_details = not self.main.config.getboolean("Clock", "show_details")
+                    self.main.config.set("Clock", "show_details", str(show_details))
                     self.render()
 
         if self.which_window == ActiveWindow.RADIO:
