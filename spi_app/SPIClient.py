@@ -55,11 +55,12 @@ class SPIClient:
         if not self.pi.connected:
             raise SystemExit("pigpio daemon not running. Start with: sudo pigpiod")
 
-        # self.spi = spidev.SpiDev()
-        self.spi = self.pi.spi_open(SPI_BUS, 2000000, 0)
-        print("SPI HANDLE:", self.spi, type(self.spi))
-        # self.spi.max_speed_hz = SPI_MAX_HZ
-        # self.spi.mode = 0b00
+        self.spi_touch = self.pi.spi_open(SPI_BUS, 2000000, 0)
+        print("SPI HANDLE:", self.spi_touch, type(self.spi_touch))
+        self.spi_display = spidev.SpiDev()
+        self.spi_display.open(SPI_BUS, SPI_DEVICE)
+        self.spi_display.max_speed_hz = SPI_MAX_HZ
+        self.spi_display.mode = 0b00
         self.pi.set_mode(GPIO_DC, pigpio.OUTPUT)
         self.pi.set_mode(GPIO_RESET, pigpio.OUTPUT)
         self.pi.set_mode(GPIO_LCD_CS, pigpio.OUTPUT)
@@ -80,7 +81,7 @@ class SPIClient:
     def read_coord(self, cmd):
         with spi_lock:
             self.pi.write(GPIO_TCS, 0)
-            _, data = self.pi.spi_xfer(self.spi, bytes([cmd, 0, 0]))
+            _, data = self.pi.spi_xfer(self.spi_touch, bytes([cmd, 0, 0]))
             self.pi.write(GPIO_TCS, 1)
         value = ((data[1] << 8) | data[2]) >> 3
         return value
@@ -127,7 +128,7 @@ class SPIClient:
     def send_cmd(self, cmd):
         self.set_dc(False)
         # use xfer2 for full-duplex safe transfer
-        self.spi.xfer2([cmd])
+        self.spi_display.xfer2([cmd])
 
     def send_data_bytes(self, bts):
         self.set_dc(True)
@@ -137,10 +138,10 @@ class SPIClient:
         if isinstance(bts, bytes):
             view = memoryview(bts)
             for i in range(0, len(view), CHUNK):
-                self.spi.xfer2(list(view[i:i+CHUNK]))
+                self.spi_display.xfer2(list(view[i:i+CHUNK]))
         else:
             for i in range(0, len(bts), CHUNK):
-                self.spi.xfer2(bts[i:i+CHUNK])
+                self.spi_display.xfer2(bts[i:i+CHUNK])
 
         self.gpio_write(GPIO_LCD_CS, 1)
 
@@ -192,6 +193,7 @@ class SPIClient:
         print("Done.")
 
     def close(self):
-        self.spi.close()
+        self.spi_display.close()
+        self.spi_touch.close()
         self.pi.stop()
         self.cb.cancel()
