@@ -1,8 +1,12 @@
 import time
 
 import event_emitter as events
-
-print(str(time.time()))
+start = time.time()
+time.sleep(1)
+end = time.time()
+print("Start: " + str(start))
+print("End:   " + str(end))
+print("Delta: " + str(end-start))
 
 class T1:
     def __init__(self, em):

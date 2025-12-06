@@ -486,10 +486,10 @@ class SPIWindow:
 
     def touch(self, x: int, y: int):
         with press_lock:
-            tt = time.time() #nanoseconds
-            if self.last_press_time is None or self.last_press_time + 1000000000 <= tt: # 1000000000ns = 1s
+            tt = time.time() #seconds
+            if self.last_press_time is None or self.last_press_time + 1 <= tt: # + 1s
                 print("last press is None or not ready")
-                self.last_press_time = tt + 1000000000
+                self.last_press_time = tt + 1
             else:
                 print("Still busy")
                 return
