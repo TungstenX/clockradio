@@ -53,24 +53,14 @@ class Main:
         # Add sections and key-value pairs
         self.config['General'] = {
             'debug': True,
-            'log_level': 'info'
+            'log_level': 'info',
+            'start_up': "RADIO"
         }
         self.config['Clock'] = {
-            "show_details": True
+            'show_details': "True"
         }
         self.config['Radio'] = {
-            "channels": [
-                {
-                    "id": 0,
-                    "name": "Hot 102.7",
-                    "url": "https://edge.iono.fm/xhls/57_high.m3u8"
-                },
-                {
-                    "id": 1,
-                    "name": "Hot 102.7 Rock",
-                    "url": "https://edge.iono.fm/xhls/303_high.m3u8"
-                }
-            ],
+            "channels": '[{"id": 0,"name": "Hot 102.7","url": "https://edge.iono.fm/xhls/57_high.m3u8"},{"id": 1,"name": "Hot 102.7 Rock","url": "https://edge.iono.fm/xhls/303_high.m3u8"}]',
             "current_channel": 0
         }
         self.config['Weather'] = {
