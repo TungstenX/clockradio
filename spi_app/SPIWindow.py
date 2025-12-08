@@ -81,6 +81,7 @@ class SPIWindow:
         self.last_press_time = None
         self.button_selector = None
         self.button_selected = None
+        self.show_details = None
 
         self.init(home_dir, start_test_mode)
 
@@ -96,9 +97,17 @@ class SPIWindow:
 
     def close(self):
         if not self.spi_client is None:
+            self.render_blank()
+            time.sleep(2)
             self.spi_client.close()
 
     def init(self, home_dir, start_test_mode):
+        self.time_util = TimeUtilsCR(self.main, home_dir)
+        self.ui_util = UIUtil(self.home_dir)
+        if not start_test_mode:
+            self.spi_client = SPIClient(self.event_emitter)  # self
+            self.render_blank()
+
         y_offset_mid = 18
         y_offset_buttons = 33
         x_offset_buttons = 23
@@ -109,10 +118,7 @@ class SPIWindow:
 
         self.which_window = ActiveWindow.CLOCK  # 0 Clock, 1 = Alarm, 2 = Radio
 
-        self.time_util = TimeUtilsCR(self.main, home_dir)
-        self.ui_util = UIUtil(self.home_dir)
-        if not start_test_mode:
-            self.spi_client = SPIClient(self.event_emitter)  # self
+        self.show_details  = self.main.config.getboolean('Clock', 'show_details')
 
         # Time:
         self.xy_time_date = [(120, 102), (120, 168), (120, 252), (120, 318),
@@ -245,6 +251,11 @@ class SPIWindow:
         self.event_emitter.on('touch', self.touch)
         self.radio_client = RadioClient()
 
+    def render_blank(self):
+        bg_pix = Image.open(self.ui_util.bg["blank"])
+        if not self.spi_client is None:
+            self.spi_client.output_image(bg_pix)
+
     def render(self):
         self.bg_pix = Image.open(self.bg_file)
 
@@ -254,7 +265,7 @@ class SPIWindow:
         if self.which_window == ActiveWindow.CLOCK:
             # Date and Time
             self.render_date_time()
-            if self.main.config.get('Clock', 'show_details'):
+            if self.show_details: #self.main.config.get('Clock', 'show_details'):
                 # Sunrise/set Moonrise/set and progress
                 self.render_sun_moon()
                 # Min max temps + rain
@@ -487,19 +498,20 @@ class SPIWindow:
         with press_lock:
             tt = time.time()  # seconds
             if self.last_press_time is None or self.last_press_time + 1 <= tt:  # + 1s
-                print("last press is None or not ready")
+                print("Last press is None or not ready")
                 self.last_press_time = tt + 1
             else:
                 print("Still busy")
                 return
-        print("Details touched")  # TODO Toggle details
+        print("Details touched")
         if self.which_window == ActiveWindow.CLOCK:
-            show_details = not self.main.config.getboolean("Clock", "show_details")
-            self.main.config.set("Clock", "show_details", str(show_details))
+            self.show_details = not self.show_details
+            print("Showing details: " + str(self.show_details))
+            self.main.config.set("Clock", "show_details", str(self.show_details))
         elif self.which_window == ActiveWindow.RADIO:
             # toggle play on and off
             pass
-        
+
         self.render()
 
     # Unused code
