@@ -1,10 +1,12 @@
 import datetime
+import os
 import threading
 import time
+import event_emitter as events
+from pathlib import Path
 from enum import Enum
 from PIL import Image
 from interval_timer import IntervalTimer
-import event_emitter as events
 
 from spi_app.SPIClient import SPIClient
 from spi_app.radio.RadioClient import RadioClient
@@ -111,13 +113,15 @@ class SPIWindow:
 
         self.init(home_dir, start_test_mode)
 
-        count = 10
         for interval in IntervalTimer(20):
-            print(interval)
+            # print(interval)
             self.update()
-            count -= 1
-            print("Loop ending in: " + str(count))
-            if count < 0:
+            # print("Loop ending in: " + str(count))
+            # File path
+            stop = os.path.join(home_dir, "stop")
+            stop_file = Path(stop)
+            # Check if the file exists
+            if stop_file.exists():
                 break
 
         self.close()
