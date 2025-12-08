@@ -43,7 +43,6 @@ def adjust_opacity(image, opacity):
     img_rgba.putdata(new_data)
     return img_rgba
 
-
 class SPIWindow:
     def __init__(self, main, home_dir, start_test_mode):
         super().__init__()
@@ -105,6 +104,7 @@ class SPIWindow:
             print(interval)
             self.update()
             count -= 1
+            print("Loop ending in: " + str(count))
             if count < 0:
                 break
 

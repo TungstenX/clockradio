@@ -186,7 +186,6 @@ if __name__ == "__main__":
     # If headless
     if start_headless:
         spiMain = SPIWindow(main, home_dir, start_test_mode)
-        spiMain.close()
     else:
         app = QApplication(sys.argv)
         app.setStyleSheet(stylesheet)
