@@ -131,7 +131,7 @@ class SPIWindow:
         self.y_offset_sun_moon = 33
         self.x_offset_sun_moon = 23
 
-        self.which_window = ActiveWindow.CLOCK  # 0 Clock, 1 = Alarm, 2 = Radio
+        self.which_window = ActiveWindow.RADIO  # 0 Clock, 1 = Alarm, 2 = Radio
 
         self.show_details  = self.main.config.getboolean('Clock', 'show_details')
 
@@ -259,7 +259,8 @@ class SPIWindow:
             "today": [None, None, None],
             "tomorrow": [None, None, None]
         }
-        self.screen_pressed = True
+
+        self.screen_pressed = False
         self.screen_press_x = 310
         self.screen_press_y = 10
         self.msp = MSP3520()
@@ -526,6 +527,8 @@ class SPIWindow:
             self.main.config.set("Clock", "show_details", str(self.show_details))
         elif self.which_window == ActiveWindow.RADIO:
             # toggle play on and off
+            self.radio_client.play = self.main.toggle_play()
+            print("Is radio playing: " + str(self.radio_client.play))
             pass
 
         self.render()
