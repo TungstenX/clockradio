@@ -305,16 +305,15 @@ class SPIWindow:
                 self.render_min_max()
             self.bg_pix.paste(self.ui_util.fg_frame, (0, 0), mask=self.ui_util.fg_frame)
         elif self.which_window == ActiveWindow.RADIO:
-            pass
-            # if not self.radio_client.play:
-            #     self.bg_pix.paste(self.ui_util.buttons["play"], self.xy_radio_button["play"],
-            #                       mask=self.ui_util.buttons["play"])
-            # if self.radio_client.station == 1:
-            #     self.bg_pix.paste(self.ui_util.buttons["station 2"], self.xy_radio_button["station 2"],
-            #                       mask=self.ui_util.buttons["station 2"])
-            # else:
-            #     self.bg_pix.paste(self.ui_util.buttons["station 1"], self.xy_radio_button["station 1"],
-            #                       mask=self.ui_util.buttons["station 1"])
+            if not self.radio_client.play:
+                self.bg_pix.paste(self.ui_util.buttons["play"], self.xy_radio_button["play"],
+                                  mask=self.ui_util.buttons["play"])
+            if self.radio_client.station == 1:
+                self.bg_pix.paste(self.ui_util.buttons["station 2"], self.xy_radio_button["station 2"],
+                                  mask=self.ui_util.buttons["station 2"])
+            else:
+                self.bg_pix.paste(self.ui_util.buttons["station 1"], self.xy_radio_button["station 1"],
+                                  mask=self.ui_util.buttons["station 1"])
 
         # if self.screen_pressed:
         #     self.bg_pix.paste(self.ui_util.pix_press_dot, (self.screen_press_x - 10, self.screen_press_y - 10), mask=self.ui_util.pix_press_dot)
@@ -374,14 +373,13 @@ class SPIWindow:
             self.bg_pix.paste(self.moon, self.xy_moon, mask=self.moon)
 
     def render_buttons(self):
-        s_xy = self.xy_button[self.button_selected]
-        self.bg_pix.paste(self.button_selector, (s_xy[0] - 5, s_xy[1] - 5), mask=self.button_selector)
-
         if self.which_window == ActiveWindow.CLOCK:
             self.bg_pix.paste(self.button["exit"], self.xy_button["exit"], mask=self.button["exit"])
             self.bg_pix.paste(self.button["radio"], self.xy_button["radio"], mask=self.button["radio"])
             self.bg_pix.paste(self.button["alarm"], self.xy_button["alarm"], mask=self.button["alarm"])
             self.bg_pix.paste(self.button["details"], self.xy_button["details"], mask=self.button["details"])
+            s_xy = self.xy_button[self.button_selected]
+            self.bg_pix.paste(self.button_selector, (s_xy[0] - 5, s_xy[1] - 5), mask=self.button_selector)
         else:
             self.bg_pix.paste(self.button["clock"], self.xy_button["clock"], mask=self.button["clock"])
 
