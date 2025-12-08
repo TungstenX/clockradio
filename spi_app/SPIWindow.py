@@ -244,7 +244,7 @@ class SPIWindow:
         self.weather_code = WeatherCode(home_dir)
         match self.which_window:
             case ActiveWindow.CLOCK:
-                self.bg_file = self.weather_code.decode_weather_for_tod(0, TimeOfDay.DAY, self.show_details)  #
+                self.bg_file = self.weather_code.decode_weather_for_tod(0, TimeOfDay.DAY, self.show_details)
             case ActiveWindow.RADIO:
                 self.bg_file = self.ui_util.bg["radio"]
         self.bg_pix = Image.open(self.bg_file)
@@ -293,8 +293,6 @@ class SPIWindow:
 
     def render(self):
         self.bg_pix = Image.open(self.bg_file)
-        if self.which_window == ActiveWindow.CLOCK and not self.show_details:
-            self.bg_pix.paste(self.ui_util.bg["no_details"])
 
         # Buttons
         self.render_buttons()
@@ -302,7 +300,7 @@ class SPIWindow:
         if self.which_window == ActiveWindow.CLOCK:
             # Date and Time
             self.render_date_time()
-            if self.show_details: #self.main.config.get('Clock', 'show_details'):
+            if self.show_details:
                 # Sunrise/set Moonrise/set and progress
                 self.render_sun_moon()
                 # Min max temps + rain
@@ -318,9 +316,6 @@ class SPIWindow:
             else:
                 self.bg_pix.paste(self.ui_util.buttons["station 1"], self.xy_radio_button["station 1"],
                                   mask=self.ui_util.buttons["station 1"])
-
-        # if self.screen_pressed:
-        #     self.bg_pix.paste(self.ui_util.pix_press_dot, (self.screen_press_x - 10, self.screen_press_y - 10), mask=self.ui_util.pix_press_dot)
 
         if not self.spi_client is None:
             self.spi_client.output_image(self.bg_pix)
@@ -534,22 +529,21 @@ class SPIWindow:
         with press_lock:
             tt = time.time()  # seconds
             if self.last_press_time is None or self.last_press_time + 1 <= tt:  # + 1s
-                print("Last press is None or not ready")
+                # print("Last press is None or not ready")
                 self.last_press_time = tt + 1
             else:
-                print("Still busy")
+                # print("Still busy")
                 return
-        print("Details touched")
+
+        # print("Details touched")
         if self.which_window == ActiveWindow.CLOCK:
             self.show_details = not self.show_details
-            print("Showing details: " + str(self.show_details))
+            # print("Showing details: " + str(self.show_details))
             self.main.config.set("Clock", "show_details", str(self.show_details))
         elif self.which_window == ActiveWindow.RADIO:
             # toggle play on and off
             self.radio_client.play = self.main.toggle_play()
-            print("Is radio playing: " + str(self.radio_client.play))
-            pass
-
+            # print("Is radio playing: " + str(self.radio_client.play))
         self.render()
 
     # Unused code

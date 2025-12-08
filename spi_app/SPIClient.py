@@ -56,7 +56,7 @@ class SPIClient:
             raise SystemExit("pigpio daemon not running. Start with: sudo pigpiod")
 
         self.spi_touch = self.pi.spi_open(SPI_BUS, 2000000, 0)
-        print("SPI HANDLE:", self.spi_touch, type(self.spi_touch))
+        # print("SPI HANDLE:", self.spi_touch, type(self.spi_touch))
         self.spi_display = spidev.SpiDev()
         self.spi_display.open(SPI_BUS, SPI_DEVICE)
         self.spi_display.max_speed_hz = SPI_MAX_HZ
@@ -97,7 +97,7 @@ class SPIClient:
                 y = self.read_coord(0xD0)  # Y command
 
                 self.pi.write(GPIO_TOUCH_CS, 1)
-                print("Touch:", x, y)
+                # print("Touch:", x, y)
                 # self.event_emitter.emit('touch', x=x, y=y)
                 self.event_emitter.emit('touch')
 
@@ -191,43 +191,16 @@ class SPIClient:
     # ------- main flow -------
     def output_image(self, image: Image.Image):
         # export pins as outputs
-        print("Converting image to RGB666 (this may take a few seconds)...")
+        # print("Converting image to RGB666 (this may take a few seconds)...")
         data = rgb888_to_rgb666_bytes(image)
         self.set_window(0, 0, WIDTH - 1, HEIGHT - 1)
-        print("Writing image to display...")
+        # print("Writing image to display...")
         self.send_data_bytes(data)
-        print("Done.")
+        # print("Done.")
 
     def close(self):
-        # try:
         self.spi_display.close()
         # self.spi_touch.close()
         if self.cb:
             self.cb.cancel()
         self.pi.stop()
-        # except AttributeError:
-        #     print("Attribute error while closing spi")
-        # except:
-        #     print("Error while closing spi")
-
-        """
-        Traceback (most recent call last):
-  File "/home/pi/Apps/venv/clockradio/Main.py", line 188, in <module>
-    spiMain = SPIWindow(main, home_dir, start_test_mode)
-  File "/home/pi/Apps/venv/clockradio/spi_app/SPIWindow.py", line 77, in __init__
-    self.update()
-    ~~~~~~~~~~~^^
-  File "/home/pi/Apps/venv/clockradio/spi_app/SPIWindow.py", line 354, in update
-    self.render()
-    ~~~~~~~~~~~^^
-  File "/home/pi/Apps/venv/clockradio/spi_app/SPIWindow.py", line 257, in render
-    self.spi_client.output_image(self.bg_pix)
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
-  File "/home/pi/Apps/venv/clockradio/spi_app/SPIClient.py", line 192, in output_image
-    self.send_data_bytes(data)
-    ~~~~~~~~~~~~~~~~~~~~^^^^^^
-  File "/home/pi/Apps/venv/clockradio/spi_app/SPIClient.py", line 141, in send_data_bytes
-    self.spi_display.xfer2(list(view[i:i+CHUNK]))
-    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
-TimeoutError: [Errno 110] Connection timed out
-        """
