@@ -124,8 +124,11 @@ class UIUtil:
                               os.path.join(home_dir, "res/bg_sunset2.png"),
                               os.path.join(home_dir, "res/bg_sunset3.png"),
                               os.path.join(home_dir, "res/bg_sunset4.png")],
-                   "blank": os.path.join(home_dir, "res/bg_blank.png")}
+                   "blank": Image.open(os.path.join(home_dir, "res/bg_blank.png")),
+                   "no_details": Image.open(os.path.join(home_dir, "res/bg_no_details.png"))}
+
         self.fg_frame = Image.open(os.path.join(home_dir, "res/fg_frame.png"))
+
         self.buttons = {
             "alarm": Image.open(os.path.join(home_dir, "res/bt_alarm.png")),
             "clock": Image.open(os.path.join(home_dir, "res/bt_clock.png")),

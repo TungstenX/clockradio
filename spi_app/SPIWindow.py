@@ -267,14 +267,13 @@ class SPIWindow:
         self.radio_client = RadioClient()
 
     def render_blank(self):
-        bg_pix = Image.open(self.ui_util.bg["blank"])
         if not self.spi_client is None:
-            self.spi_client.output_image(bg_pix)
+            self.spi_client.output_image(self.ui_util.bg["blank"])
 
     def render(self):
         self.bg_pix = Image.open(self.bg_file)
         if self.which_window == ActiveWindow.CLOCK and not self.show_details:
-            self.bg_pix = adjust_opacity(self.bg_pix, 0.5)
+            self.bg_pix.paste(self.ui_util.bg["no_details"])
 
         # Buttons
         self.render_buttons()
