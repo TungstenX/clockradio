@@ -29,6 +29,21 @@ class ActiveWindow(Enum):
     RADIO = 2
 
 
+def adjust_opacity(image, opacity):
+    """Adjust the opacity of an RGBA image"""
+    img_rgba = image.convert('RGBA')
+    data = img_rgba.getdata()
+
+    new_data = []
+    for item in data:
+        # Modify alpha value while keeping RGB same
+        new_data.append((item[0], item[1], item[2],
+                         int(item[3] * opacity)))
+
+    img_rgba.putdata(new_data)
+    return img_rgba
+
+
 class SPIWindow:
     def __init__(self, main, home_dir, start_test_mode):
         super().__init__()
@@ -258,6 +273,8 @@ class SPIWindow:
 
     def render(self):
         self.bg_pix = Image.open(self.bg_file)
+        if self.which_window == ActiveWindow.CLOCK and not self.show_details:
+            self.bg_pix = adjust_opacity(self.bg_pix, 0.5)
 
         # Buttons
         self.render_buttons()
