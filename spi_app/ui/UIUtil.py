@@ -135,6 +135,7 @@ class UIUtil:
             "station 1": Image.open(os.path.join(home_dir, "res/bt_radio_station_left_off.png")),
             "station 2": Image.open(os.path.join(home_dir, "res/bt_radio_station_right_off.png"))
         }
+        self.buttons_selector = Image.open(os.path.join(home_dir, "res/bt_selected.png"))
 
         self.moon_phases = {
             "First Quarter": os.path.join(home_dir, "res/moon_first_quarter.png"),

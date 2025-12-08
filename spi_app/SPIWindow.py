@@ -18,6 +18,7 @@ DIGIT_SIZE_SMALL = (20, 15)
 DIGIT_SIZE_X_SMALL = (10, 7)
 COLON_SIZE_MEDIUM = (20, 6)
 BUTTON_SIZE = (30, 30)
+BUTTON_SELECTOR_SIZE = (40, 40)
 
 em = events.EventEmitter()
 press_lock = threading.Lock()
@@ -78,6 +79,8 @@ class SPIWindow:
         self.screen_press_x = None
         self.screen_press_y = None
         self.last_press_time = None
+        self.button_selector = None
+        self.button_selected = None
 
         self.init(home_dir, start_test_mode)
 
@@ -192,6 +195,8 @@ class SPIWindow:
             "exit": self.ui_util.buttons["exit"].resize(BUTTON_SIZE),
             "radio": self.ui_util.buttons["radio"].resize(BUTTON_SIZE)
         }
+        self.button_selector = self.ui_util.buttons_selector.resize(BUTTON_SELECTOR_SIZE)
+        self.button_selected = "details"
 
         self.sun_bar = self.ui_util.bar["sun_bar"]
         self.moon_bar = self.ui_util.bar["moon_bar"]
@@ -266,8 +271,8 @@ class SPIWindow:
                 self.bg_pix.paste(self.ui_util.buttons["station 1"], self.xy_radio_button["station 1"],
                                   mask=self.ui_util.buttons["station 1"])
 
-        if self.screen_pressed:
-            self.bg_pix.paste(self.ui_util.pix_press_dot, (self.screen_press_x - 10, self.screen_press_y - 10), mask=self.ui_util.pix_press_dot)
+        # if self.screen_pressed:
+        #     self.bg_pix.paste(self.ui_util.pix_press_dot, (self.screen_press_x - 10, self.screen_press_y - 10), mask=self.ui_util.pix_press_dot)
 
         if not self.spi_client is None:
             self.spi_client.output_image(self.bg_pix)
@@ -324,6 +329,9 @@ class SPIWindow:
             self.bg_pix.paste(self.moon, self.xy_moon, mask=self.moon)
 
     def render_buttons(self):
+        s_xy = self.xy_button[self.button_selected]
+        self.bg_pix.paste(self.button_selector, (s_xy[0] - 5, s_xy[1] - 5), mask=self.button_selector)
+
         if self.which_window == ActiveWindow.CLOCK:
             self.bg_pix.paste(self.button["exit"], self.xy_button["exit"], mask=self.button["exit"])
             self.bg_pix.paste(self.button["radio"], self.xy_button["radio"], mask=self.button["radio"])
@@ -475,7 +483,27 @@ class SPIWindow:
         pix_a[1] = self.ui_util.pix_nums[int(str_min[1])].resize(DIGIT_SIZE_SMALL)
         pix_a[2] = self.ui_util.pix_percentage.resize(DIGIT_SIZE_SMALL)
 
-    def process_dot(self, mapped_x = 0, mapped_y = 0):
+    def touch(self):
+        with press_lock:
+            tt = time.time()  # seconds
+            if self.last_press_time is None or self.last_press_time + 1 <= tt:  # + 1s
+                print("last press is None or not ready")
+                self.last_press_time = tt + 1
+            else:
+                print("Still busy")
+                return
+        print("Details touched")  # TODO Toggle details
+        if self.which_window == ActiveWindow.CLOCK:
+            show_details = not self.main.config.getboolean("Clock", "show_details")
+            self.main.config.set("Clock", "show_details", str(show_details))
+        elif self.which_window == ActiveWindow.RADIO:
+            # toggle play on and off
+            pass
+        
+        self.render()
+
+    # Unused code
+    def old_process_dot(self, mapped_x = 0, mapped_y = 0):
         if self.screen_pressed:
             self.screen_pressed = False
             if self.timer_rerender_dot and self.timer_rerender_dot.is_alive():
@@ -486,7 +514,7 @@ class SPIWindow:
             self.screen_press_y = mapped_y
         self.render()
 
-    def touch(self, x: int, y: int):
+    def old_touch(self, x: int, y: int):
         with press_lock:
             tt = time.time() #seconds
             if self.last_press_time is None or self.last_press_time + 1 <= tt: # + 1s
@@ -499,9 +527,9 @@ class SPIWindow:
         mapped_x, mapped_y = self.msp.map(x, y)
         print(f"SPIWindow Touched mapped {mapped_x},{mapped_y}")
 
-        self.process_dot(mapped_x, mapped_y)
+        self.old_process_dot(mapped_x, mapped_y)
         # Create a timer that will call timer_function after 3 seconds
-        self.timer_rerender_dot = threading.Timer(3, self.process_dot)
+        self.timer_rerender_dot = threading.Timer(3, self.old_process_dot)
 
         if self.which_window == ActiveWindow.CLOCK:
             button_name = "exit"

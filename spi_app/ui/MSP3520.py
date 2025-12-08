@@ -18,11 +18,11 @@ class MSP3520:
         
         TL
         |disp_x|disp_y|touch_x|touch_y|        
-        | 0    | 0    | 3800  | 300   |
+        | 320  | 0    | 3800  | 3900  |
         
-        BR
+        TR
         |disp_x|disp_y|touch_x|touch_y|        
-        | 0    | 480  | 300   | 300   |
+        | 320  | 480  | 300   | 3900  |
         """
         self.x_min = min(TL[0], BL[0])
         self.x_max = max(TR[0], BR[0])

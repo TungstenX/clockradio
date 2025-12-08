@@ -98,7 +98,8 @@ class SPIClient:
 
                 self.pi.write(GPIO_TOUCH_CS, 1)
                 print("Touch:", x, y)
-                self.event_emitter.emit('touch', x=x, y=y)
+                # self.event_emitter.emit('touch', x=x, y=y)
+                self.event_emitter.emit('touch')
 
                 time.sleep(0.02)
         finally:
