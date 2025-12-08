@@ -28,6 +28,18 @@ class ActiveWindow(Enum):
     ALARM = 1
     RADIO = 2
 
+    @staticmethod
+    def from_str(label):
+        match label:
+            case "CLOCK":
+                return ActiveWindow.CLOCK
+            case "ALARM":
+                return ActiveWindow.ALARM
+            case "RADIO":
+                return ActiveWindow.RADIO
+            case _:
+                return ActiveWindow.CLOCK
+
 
 def adjust_opacity(image, opacity):
     """Adjust the opacity of an RGBA image"""
@@ -131,7 +143,7 @@ class SPIWindow:
         self.y_offset_sun_moon = 33
         self.x_offset_sun_moon = 23
 
-        self.which_window = ActiveWindow[self.main.config.get("start_up")] # ActiveWindow.CLOCK  # 0 Clock, 1 = Alarm, 2 = Radio
+        self.which_window = ActiveWindow.from_str(self.main.config.get("start_up")) # ActiveWindow.CLOCK  # 0 Clock, 1 = Alarm, 2 = Radio
 
         self.show_details  = self.main.config.getboolean('Clock', 'show_details')
 

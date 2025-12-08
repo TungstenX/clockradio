@@ -4,3 +4,4 @@ spi_app/weather/__pycache__
 .idea
 test1.bmp
 .venv
+config.ini
