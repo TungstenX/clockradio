@@ -143,7 +143,7 @@ class SPIWindow:
         self.y_offset_sun_moon = 33
         self.x_offset_sun_moon = 23
 
-        self.which_window = ActiveWindow.from_str(self.main.config.get("start_up")) # ActiveWindow.CLOCK  # 0 Clock, 1 = Alarm, 2 = Radio
+        self.which_window = ActiveWindow.from_str(self.main.config.get("General", "start_up"))
 
         self.show_details  = self.main.config.getboolean('Clock', 'show_details')
 

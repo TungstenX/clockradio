@@ -63,14 +63,10 @@ class Main:
             "channels": '[{"id": 0,"name": "Hot 102.7","url": "https://edge.iono.fm/xhls/57_high.m3u8"},{"id": 1,"name": "Hot 102.7 Rock","url": "https://edge.iono.fm/xhls/303_high.m3u8"}]',
             "current_channel": 0
         }
-        self.config['Weather'] = {
-            "api_key": "0bea637c931042fbbe0211531251311"
-        }
 
         config_file = Path("config.ini")
         if not config_file.exists():
             self.write_config()
-        # self.write_config()
         self.read_config()
 
         self.player = vlc.MediaPlayer()
