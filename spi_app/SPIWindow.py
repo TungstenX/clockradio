@@ -238,7 +238,11 @@ class SPIWindow:
 
         # Opening the primary image (used in background)
         self.weather_code = WeatherCode(home_dir)
-        self.bg_file = self.weather_code.decode_weather_for_tod(0, TimeOfDay.DAY)  #
+        match self.which_window:
+            case ActiveWindow.CLOCK:
+                self.bg_file = self.weather_code.decode_weather_for_tod(0, TimeOfDay.DAY)  #
+            case ActiveWindow.RADIO:
+                self.bg_file = self.ui_util.bg["radio"]
         self.bg_pix = Image.open(self.bg_file)
 
         self.colon = self.ui_util.pix_colon
@@ -301,15 +305,16 @@ class SPIWindow:
                 self.render_min_max()
             self.bg_pix.paste(self.ui_util.fg_frame, (0, 0), mask=self.ui_util.fg_frame)
         elif self.which_window == ActiveWindow.RADIO:
-            if not self.radio_client.play:
-                self.bg_pix.paste(self.ui_util.buttons["play"], self.xy_radio_button["play"],
-                                  mask=self.ui_util.buttons["play"])
-            if self.radio_client.station == 1:
-                self.bg_pix.paste(self.ui_util.buttons["station 2"], self.xy_radio_button["station 2"],
-                                  mask=self.ui_util.buttons["station 2"])
-            else:
-                self.bg_pix.paste(self.ui_util.buttons["station 1"], self.xy_radio_button["station 1"],
-                                  mask=self.ui_util.buttons["station 1"])
+            pass
+            # if not self.radio_client.play:
+            #     self.bg_pix.paste(self.ui_util.buttons["play"], self.xy_radio_button["play"],
+            #                       mask=self.ui_util.buttons["play"])
+            # if self.radio_client.station == 1:
+            #     self.bg_pix.paste(self.ui_util.buttons["station 2"], self.xy_radio_button["station 2"],
+            #                       mask=self.ui_util.buttons["station 2"])
+            # else:
+            #     self.bg_pix.paste(self.ui_util.buttons["station 1"], self.xy_radio_button["station 1"],
+            #                       mask=self.ui_util.buttons["station 1"])
 
         # if self.screen_pressed:
         #     self.bg_pix.paste(self.ui_util.pix_press_dot, (self.screen_press_x - 10, self.screen_press_y - 10), mask=self.ui_util.pix_press_dot)
