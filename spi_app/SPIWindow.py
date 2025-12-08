@@ -378,12 +378,12 @@ class SPIWindow:
 
     def render_buttons(self):
         if self.which_window == ActiveWindow.CLOCK:
+            s_xy = self.xy_button[self.button_selected]
+            self.bg_pix.paste(self.button_selector, (s_xy[0] - 5, s_xy[1] - 5), mask=self.button_selector)
             self.bg_pix.paste(self.button["exit"], self.xy_button["exit"], mask=self.button["exit"])
             self.bg_pix.paste(self.button["radio"], self.xy_button["radio"], mask=self.button["radio"])
             self.bg_pix.paste(self.button["alarm"], self.xy_button["alarm"], mask=self.button["alarm"])
             self.bg_pix.paste(self.button["details"], self.xy_button["details"], mask=self.button["details"])
-            s_xy = self.xy_button[self.button_selected]
-            self.bg_pix.paste(self.button_selector, (s_xy[0] - 5, s_xy[1] - 5), mask=self.button_selector)
         else:
             self.bg_pix.paste(self.button["clock"], self.xy_button["clock"], mask=self.button["clock"])
 
@@ -443,7 +443,7 @@ class SPIWindow:
         if self.time_util.can_update_astro():
             self.time_util.weather_client.fetch_weather()  # TDOD Move to time_util
             self.bg_file = self.weather_code.decode_weather_for_tod(self.time_util.weather_client.current_cond,
-                                                                    self.time_util.weather_client.tod)
+                                                                    self.time_util.weather_client.tod, self.show_details)
             # Get moon phase
             self.moon = Image.open(self.time_util.ui_util.moon_phases[self.time_util.weather_client.current_moon])
             digit_list = {
