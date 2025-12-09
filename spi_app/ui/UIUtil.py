@@ -165,7 +165,7 @@ class UIUtil:
                                     os.path.join(home_dir, "res/bg_sunset_nd4.png")],
                    "blank": Image.open(os.path.join(home_dir, "res/bg_blank.png")),
                    "radio": os.path.join(home_dir, "res/bg_radio.png"),
-                   "no_details": Image.open(os.path.join(home_dir, "res/bg_no_details.png"))}
+                   "no_details": os.path.join(home_dir, "res/bg_no_details.png")}
 
         self.fg_frame = Image.open(os.path.join(home_dir, "res/fg_frame.png"))
 

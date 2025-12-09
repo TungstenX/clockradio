@@ -295,7 +295,7 @@ class SPIWindow:
         if self.show_details:
             self.bg_pix = Image.open(self.bg_file)
         else:
-            self.bg_pix = self.ui_util.bg["no_details"]
+            self.bg_pix = Image.open(self.ui_util.bg["no_details"])
 
         # Buttons
         self.render_buttons()
