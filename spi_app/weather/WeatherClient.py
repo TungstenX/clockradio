@@ -60,7 +60,8 @@ class WeatherClientCR:
 
     def fetch_weather(self):
         dt_now = datetime.datetime.now()
-        print("Checking weather")
+        # print("Checking weather")
+        print('.', sep='', end='', flush=True)
         complete_url = "https://api.weatherapi.com/v1/forecast.json?key=" + self.config.get("Weather", "api_key") + "&q=-26.063018646041453,27.961667533360554&aqi=no&days=3"
 
         response = requests.get(complete_url)
@@ -144,8 +145,8 @@ class WeatherClientCR:
                 self.moon_minutes = 0
                 self.progress_bar_moon.set_range(int(self.moon_minutes_total))
 
-            print("Is sun up: " + str(self.forecast["today"]["sun"]["is_up"]))
-            print("Is moon up: " + str(self.forecast["today"]["moon"]["is_up"]))
+            # print("Is sun up: " + str(self.forecast["today"]["sun"]["is_up"]))
+            # print("Is moon up: " + str(self.forecast["today"]["moon"]["is_up"]))
             if self.forecast["today"]["sun"]["is_up"]:
                 if self.old_is_sun_up != self.forecast["today"]["sun"]["is_up"]:
                     self.old_is_sun_up = self.forecast["today"]["sun"]["is_up"]
