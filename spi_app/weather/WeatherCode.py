@@ -60,35 +60,31 @@ class WeatherCode:
                 case TimeOfDay.NIGHT:
                     return self.ui_util.get_bg_path(night)
 
-    def decode_weather_for_tod(self, code: int, tod: TimeOfDay, show_details):
-        extra = ""
-        if not show_details:
-            extra = "_nd"
-
+    def decode_weather_for_tod(self, code: int, tod: TimeOfDay):
         match code:
             case 1000:
                 # "day" : "Sunny",
                 # "night" : "Clear",
-                return self.get_by_time_of_day("sunrise" + extra, "day_clear" + extra, "sunset" + extra, "night_clear" + extra, tod)
+                return self.get_by_time_of_day("sunrise", "day_clear", "sunset", "night_clear", tod)
             case 1003:
                 # "day" : "Partly cloudy",
                 # "night" : "Partly cloudy",
-                return self.get_by_time_of_day("sunrise" + extra, "day_cloudy" + extra, "sunset" + extra, "night_pcloudy" + extra, tod)
+                return self.get_by_time_of_day("sunrise", "day_cloudy", "sunset", "night_pcloudy", tod)
 
             case 1006 | 1009 | 1030 | 1063 | 1066 | 1069 | 1072 | 1135 | 1147 | 1150 | 1153 | 1168 | 1171 | 1180 | 1198 | 1204 | 1183 | 1213 | 1210 | 1240:
                 # Overcast, Mist, Cloudy, Patchy rain possible
-                return self.get_by_time_of_day("day_lrain" + extra, "day_lrain" + extra, "night_cloudy" + extra, "night_cloudy" + extra, tod)
+                return self.get_by_time_of_day("day_lrain", "day_lrain", "night_cloudy", "night_cloudy", tod)
 
             case 1087 | 1273 | 1276 | 1279 | 1282 | 1117:
                 # Thunder
-                return self.get_by_time_of_day("day_thunder" + extra, "day_thunder" + extra, "night_thunder" + extra, "night_thunder" + extra, tod)
+                return self.get_by_time_of_day("day_thunder", "day_thunder", "night_thunder", "night_thunder", tod)
 
             case 1186 | 1189 | 1192 | 1195 | 1201 | 1207 | 1216 | 1243 | 1246:
                 # Rain
-                return self.get_by_time_of_day("day_rain" + extra, "day_rain" + extra, "night_rain" + extra, "night_rain" + extra, tod)
+                return self.get_by_time_of_day("day_rain", "day_rain", "night_rain", "night_rain", tod)
 
             case _:
-                return self.get_by_time_of_day("sunrise" + extra, "day_clear" + extra, "sunset" + extra, "night_clear" + extra, tod)
+                return self.get_by_time_of_day("sunrise", "day_clear", "sunset", "night_clear", tod)
 
 # https://www.weatherapi.com/docs/weather_conditions.json
 def decode_weather_for_tod(code: int, tod: TimeOfDay):

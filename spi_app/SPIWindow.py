@@ -244,7 +244,7 @@ class SPIWindow:
         self.weather_code = WeatherCode(home_dir)
         match self.which_window:
             case ActiveWindow.CLOCK:
-                self.bg_file = self.weather_code.decode_weather_for_tod(0, TimeOfDay.DAY, self.show_details)
+                self.bg_file = self.weather_code.decode_weather_for_tod(0, TimeOfDay.DAY)
             case ActiveWindow.RADIO:
                 self.bg_file = self.ui_util.bg["radio"]
         self.bg_pix = Image.open(self.bg_file)
@@ -292,7 +292,10 @@ class SPIWindow:
             self.spi_client.output_image(self.ui_util.bg["blank"])
 
     def render(self):
-        self.bg_pix = Image.open(self.bg_file)
+        if self.show_details:
+            self.bg_pix = Image.open(self.bg_file)
+        else:
+            self.bg_pix = self.ui_util.bg["no_details"]
 
         # Buttons
         self.render_buttons()
@@ -438,7 +441,7 @@ class SPIWindow:
         if self.time_util.can_update_astro():
             self.time_util.weather_client.fetch_weather()  # TDOD Move to time_util
             self.bg_file = self.weather_code.decode_weather_for_tod(self.time_util.weather_client.current_cond,
-                                                                    self.time_util.weather_client.tod, self.show_details)
+                                                                    self.time_util.weather_client.tod)
             # Get moon phase
             self.moon = Image.open(self.time_util.ui_util.moon_phases[self.time_util.weather_client.current_moon])
             digit_list = {
