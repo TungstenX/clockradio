@@ -1,4 +1,5 @@
 import datetime
+import logging
 from typing import Any
 from spi_app.ui.UIUtil import UIUtil
 from spi_app.weather.WeatherClient import WeatherClientCR
@@ -10,11 +11,12 @@ class TimeUtilsCR:
         self.config = main.config
         self.ui_util = UIUtil(home_dir)
         self.weather_client = WeatherClientCR(main)
+        self.logger = logging.getLogger()
 
     def get_time_parts(self, dt) -> list[Any]:
         hour = dt.hour
         minute = dt.minute
-        # print("Hour's minute:" + str(minute))
+        self.logger.debug("Hour's minute:" + str(minute))
         hour_ones = hour % 10
         hour_tens = (hour % 100) // 10
         minute_ones = minute % 10

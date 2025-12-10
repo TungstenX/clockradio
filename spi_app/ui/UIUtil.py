@@ -1,3 +1,4 @@
+import logging
 import os
 import random
 from PIL import Image
@@ -45,6 +46,7 @@ class UIUtil:
         super().__init__()
 
         self.home_dir = home_dir
+        self.logger = logging.getLogger()
 
         self.pix_num_0 = Image.open(os.path.join(home_dir, "res/0.png"))
         self.pix_num_1 = Image.open(os.path.join(home_dir, "res/1.png"))
@@ -57,8 +59,8 @@ class UIUtil:
         self.pix_num_8 = Image.open(os.path.join(home_dir, "res/8.png"))
         self.pix_num_9 = Image.open(os.path.join(home_dir, "res/9.png"))
         self.pix_colon = Image.open(os.path.join(home_dir, "res/colon.png"))
-        self.pix_dash = Image.open(os.path.join(home_dir, "res/dash.png"))
-        self.pix_dot = Image.open(os.path.join(home_dir, "res/dot.png"))
+        self.pix_dash =  Image.open(os.path.join(home_dir, "res/dash.png"))
+        self.pix_dot =   Image.open(os.path.join(home_dir, "res/dot.png"))
         self.pix_blank = Image.open(os.path.join(home_dir, "res/blank.png"))
         self.pix_let_A = Image.open(os.path.join(home_dir, "res/A.png"))
         self.pix_let_D = Image.open(os.path.join(home_dir, "res/D.png"))
@@ -172,7 +174,7 @@ class UIUtil:
                 index = get_random(len(bg_array))
                 return bg_array[index]
             except:
-                print("Could not get random background for " + name)
+                self.logger.error("Could not get random background for ", name)
         return self.bg["day_clear"][0]
 
     def press_button(self):

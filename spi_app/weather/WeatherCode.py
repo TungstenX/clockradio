@@ -1,8 +1,6 @@
 from enum import Enum
 import random
-
 from spi_app.ui.UIUtil import UIUtil
-
 
 class TimeOfDay(Enum):
     SUNRISE = 1
@@ -24,13 +22,11 @@ MAX_NIGHT_THUNDER = 2
 MAX_SUNRISE = 4
 MAX_SUNSET = 4
 
-
 def get_random(max_num: int) -> int:
     if max_num == 1:
         return 1
     else:
         return random.randint(1, max_num)
-
 
 def get_by_time_of_day(prefix_sunrise, prefix_day, prefix_sunset, prefix_night, max_sunrise: int, max_day: int,
                        max_sunset: int, max_night: int, tod: TimeOfDay):

@@ -1,4 +1,6 @@
 import datetime
+import logging
+
 import requests
 from dateutil import parser
 from spi_app.ui.UIUtil import ProgressBarDataCR
@@ -11,6 +13,7 @@ class WeatherClientCR:
         self.main = main
         self.config = main.config
 
+        self.logger = logging.getLogger()
         self.progress_bar_sun = ProgressBarDataCR()
         self.progress_bar_moon = ProgressBarDataCR()
 
@@ -60,14 +63,14 @@ class WeatherClientCR:
 
     def fetch_weather(self):
         dt_now = datetime.datetime.now()
-        # print("Checking weather")
+        self.logger.info("Checking weather")
         print('.', sep='', end='', flush=True)
         complete_url = "https://api.weatherapi.com/v1/forecast.json?key=" + self.config.get("Weather", "api_key") + "&q=-26.063018646041453,27.961667533360554&aqi=no&days=3"
 
         response = requests.get(complete_url)
         data = response.json()
         if response.status_code == 200:
-            #print(data)
+            self.logger.debug(data)
             # Set min and max temps
             self.current_temp_max = data["forecast"]["forecastday"][0]["day"]["maxtemp_c"]
             self.current_temp_min = data["forecast"]["forecastday"][0]["day"]["mintemp_c"]
@@ -100,15 +103,15 @@ class WeatherClientCR:
                 if moonset != "No moonset":
                     self.forecast["today"]["moon"]["set"] = parser.parse(moonset) + datetime.timedelta(days=1)
 
-            # print("Sun rise date : " + self.forecast["today"]["sun"]["rise"].strftime('%Y-%m-%d, %H:%M'))
-            # print("Sun set date  : " + self.forecast["today"]["sun"]["set"].strftime('%Y-%m-%d, %H:%M'))
-            # print("Moon rise date: " + self.forecast["today"]["moon"]["rise"].strftime('%Y-%m-%d, %H:%M'))
-            # print("Moon set date : " + self.forecast["today"]["moon"]["set"].strftime('%Y-%m-%d, %H:%M'))
+            self.logger.debug("Sun rise date : " + self.forecast["today"]["sun"]["rise"].strftime('%Y-%m-%d, %H:%M'))
+            self.logger.debug("Sun set date  : " + self.forecast["today"]["sun"]["set"].strftime('%Y-%m-%d, %H:%M'))
+            self.logger.debug("Moon rise date: " + self.forecast["today"]["moon"]["rise"].strftime('%Y-%m-%d, %H:%M'))
+            self.logger.debug("Moon set date : " + self.forecast["today"]["moon"]["set"].strftime('%Y-%m-%d, %H:%M'))
             if self.forecast["today"]["moon"]["rise"] > self.forecast["today"]["moon"]["set"]:
                  self.forecast["today"]["moon"]["set"] += datetime.timedelta(days=1)
 
-            # print("Moon rise date: " + self.forecast["today"]["moon"]["rise"].strftime('%Y-%m-%d, %H:%M'))
-            # print("Moon set date : " + self.forecast["today"]["moon"]["set"].strftime('%Y-%m-%d, %H:%M'))
+            self.logger.debug("Moon rise date: " + self.forecast["today"]["moon"]["rise"].strftime('%Y-%m-%d, %H:%M'))
+            self.logger.debug("Moon set date : " + self.forecast["today"]["moon"]["set"].strftime('%Y-%m-%d, %H:%M'))
             self.old_is_sun_up = self.forecast["today"]["sun"]["is_up"]
             self.old_is_moon_up = self.forecast["today"]["moon"]["is_up"]
 
@@ -145,8 +148,8 @@ class WeatherClientCR:
                 self.moon_minutes = 0
                 self.progress_bar_moon.set_range(int(self.moon_minutes_total))
 
-            # print("Is sun up: " + str(self.forecast["today"]["sun"]["is_up"]))
-            # print("Is moon up: " + str(self.forecast["today"]["moon"]["is_up"]))
+            self.logger.debug("Is sun up: " + str(self.forecast["today"]["sun"]["is_up"]))
+            self.logger.debug("Is moon up: " + str(self.forecast["today"]["moon"]["is_up"]))
             if self.forecast["today"]["sun"]["is_up"]:
                 if self.old_is_sun_up != self.forecast["today"]["sun"]["is_up"]:
                     self.old_is_sun_up = self.forecast["today"]["sun"]["is_up"]
@@ -218,4 +221,4 @@ class WeatherClientCR:
 
             self.current_moon = data["forecast"]["forecastday"][0]["astro"]["moon_phase"]
         else:
-            print(" City Not Found ")
+            self.logger.error("City Not Found ")

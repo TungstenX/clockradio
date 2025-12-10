@@ -5,3 +5,4 @@ spi_app/weather/__pycache__
 test1.bmp
 .venv
 config.ini
+*.log

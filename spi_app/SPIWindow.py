@@ -1,10 +1,12 @@
 import datetime
+import logging
 import os
 import threading
 import time
-import event_emitter as events
-from pathlib import Path
 from enum import Enum
+from pathlib import Path
+
+import event_emitter as events
 from PIL import Image
 from interval_timer import IntervalTimer
 
@@ -24,6 +26,7 @@ BUTTON_SELECTOR_SIZE = (40, 40)
 
 em = events.EventEmitter()
 press_lock = threading.Lock()
+
 
 class ActiveWindow(Enum):
     CLOCK = 0
@@ -56,6 +59,7 @@ def adjust_opacity(image, opacity):
 
     img_rgba.putdata(new_data)
     return img_rgba
+
 
 class SPIWindow:
     def __init__(self, main, home_dir, start_test_mode):
@@ -110,18 +114,19 @@ class SPIWindow:
         self.button_selector = None
         self.button_selected = None
         self.show_details = None
+        self.logger = logging.getLogger()
 
         self.init(home_dir, start_test_mode)
 
         for interval in IntervalTimer(20):
-            # print(interval)
+            self.logger.info(interval)
             self.update()
-            # print("Loop ending in: " + str(count))
             # File path
             stop = os.path.join(home_dir, "stop")
             stop_file = Path(stop)
             # Check if the file exists
             if stop_file.exists():
+                self.logger.info("Found stop file")
                 break
 
         self.close()
@@ -149,7 +154,7 @@ class SPIWindow:
 
         self.which_window = ActiveWindow.from_str(self.main.config.get("General", "start_up"))
 
-        self.show_details  = self.main.config.getboolean('Clock', 'show_details')
+        self.show_details = self.main.config.getboolean('Clock', 'show_details')
 
         # Time:
         self.xy_time_date = [(120, 102), (120, 168), (120, 252), (120, 318),
@@ -324,7 +329,7 @@ class SPIWindow:
             self.spi_client.output_image(self.bg_pix)
         else:
             self.bg_pix.save('test1.bmp')
-            print("spi_client could not init or running in test mode")
+            self.logger.info("spi_client could not init or running in test mode")
 
     def render_sun_moon(self):
         for sm in ["sun", "moon"]:
@@ -340,17 +345,22 @@ class SPIWindow:
         # Sun / Moon Bar
 
         # Sun
-        # print("Sun progress:  " + str(self.time_util.weather_client.forecast["today"]["sun"]["rise"]) + " - " + str(self.time_util.weather_client.forecast["today"]["sun"]["set"]) + " current: " + str(self.time_util.weather_client.progress_bar_sun.get_value()) + " max: " + str(self.time_util.weather_client.progress_bar_sun.get_range()))
-        # print("Sun factor:    " + str(self.time_util.weather_client.progress_bar_sun.get_factor()))
+
+        self.logger.debug(
+            "Sun progress:  " + str(self.time_util.weather_client.forecast["today"]["sun"]["rise"]) + " - " + str(
+                self.time_util.weather_client.forecast["today"]["sun"]["set"]) + " current: " + str(
+                self.time_util.weather_client.progress_bar_sun.get_value()) + " max: " + str(
+                self.time_util.weather_client.progress_bar_sun.get_range()))
+        self.logger.debug("Sun factor:    " + str(self.time_util.weather_client.progress_bar_sun.get_factor()))
         if self.time_util.weather_client.forecast["today"]["sun"][
             "is_up"] and self.time_util.weather_client.progress_bar_sun.is_valid():
             self.bg_pix.paste(self.sun_bar, self.xy_sun_bar, mask=self.sun_bar)
             width, height = self.sun_bar.size
             img_w, img_h = self.sun.size
             y = (height * (1 - self.time_util.weather_client.progress_bar_sun.get_factor())) - (img_h / 2)
-            # print("Sun factor 1-: " + str(1 - self.time_util.weather_client.progress_bar_sun.get_factor()))
-            # print("Sun height:     " + str(height))
-            # print("Sun y:         " + str(y))
+            self.logger.debug("Sun factor 1-: " + str(1 - self.time_util.weather_client.progress_bar_sun.get_factor()))
+            self.logger.debug("Sun height:     " + str(height))
+            self.logger.debug("Sun y:         " + str(y))
             if int(y) < 0:
                 y = 0
             elif int(y + img_h) > height:
@@ -362,8 +372,9 @@ class SPIWindow:
 
         # Moon
         self.bg_pix.paste(self.moon_bar, self.xy_moon_bar, mask=self.moon_bar)
-        if self.time_util.weather_client.forecast["today"]["moon"][
-            "is_up"] and self.time_util.weather_client.progress_bar_moon.is_valid() and not self.moon is None:
+        if (self.time_util.weather_client.forecast["today"]["moon"]["is_up"] and
+                self.time_util.weather_client.progress_bar_moon.is_valid() and
+                not self.moon is None):
             width, height = self.moon_bar.size
             img_w, img_h = self.moon.size
             y = (height * (1 - self.time_util.weather_client.progress_bar_moon.get_factor())) - (img_h / 2)
@@ -424,7 +435,6 @@ class SPIWindow:
 
     def update_time_date(self):
         dt = datetime.datetime.now()
-        # print("update_time_date: " + str(dt.minute))
         self.time_date = self.time_util.get_time_parts(dt)
 
         self.time_date[4] = self.time_date[4].resize(DIGIT_SIZE_MEDIUM)
@@ -439,7 +449,7 @@ class SPIWindow:
 
     def update_astro(self):
         if self.time_util.can_update_astro():
-            self.time_util.weather_client.fetch_weather()  # TDOD Move to time_util
+            self.time_util.weather_client.fetch_weather()
             self.bg_file = self.weather_code.decode_weather_for_tod(self.time_util.weather_client.current_cond,
                                                                     self.time_util.weather_client.tod)
             # Get moon phase
@@ -532,94 +542,18 @@ class SPIWindow:
         with press_lock:
             tt = time.time()  # seconds
             if self.last_press_time is None or self.last_press_time + 1 <= tt:  # + 1s
-                # print("Last press is None or not ready")
+                self.logger.info("Touch: Last press is None or ready")
                 self.last_press_time = tt + 1
             else:
-                # print("Still busy")
+                self.logger.info("Touch: Busy")
                 return
 
-        # print("Details touched")
         if self.which_window == ActiveWindow.CLOCK:
             self.show_details = not self.show_details
-            # print("Showing details: " + str(self.show_details))
+            self.logger.debug("Showing details: " + str(self.show_details))
             self.main.config.set("Clock", "show_details", str(self.show_details))
         elif self.which_window == ActiveWindow.RADIO:
             # toggle play on and off
             self.radio_client.play = self.main.toggle_play()
-            # print("Is radio playing: " + str(self.radio_client.play))
+            self.logger.debug("Is radio playing: " + str(self.radio_client.play))
         self.render()
-
-    # Unused code
-    def old_process_dot(self, mapped_x = 0, mapped_y = 0):
-        if self.screen_pressed:
-            self.screen_pressed = False
-            if self.timer_rerender_dot and self.timer_rerender_dot.is_alive():
-                self.timer_rerender_dot.cancel()
-        else:
-            self.screen_pressed = True
-            self.screen_press_x = mapped_x
-            self.screen_press_y = mapped_y
-        self.render()
-
-    def old_touch(self, x: int, y: int):
-        with press_lock:
-            tt = time.time() #seconds
-            if self.last_press_time is None or self.last_press_time + 1 <= tt: # + 1s
-                print("last press is None or not ready")
-                self.last_press_time = tt + 1
-            else:
-                print("Still busy")
-                return
-        print(f"SPIWindow Touched in {x},{y}")
-        mapped_x, mapped_y = self.msp.map(x, y)
-        print(f"SPIWindow Touched mapped {mapped_x},{mapped_y}")
-
-        self.old_process_dot(mapped_x, mapped_y)
-        # Create a timer that will call timer_function after 3 seconds
-        self.timer_rerender_dot = threading.Timer(3, self.old_process_dot)
-
-        if self.which_window == ActiveWindow.CLOCK:
-            button_name = "exit"
-            if self.xy_button[button_name][0] <= mapped_x <= (
-                    self.xy_button[button_name][0] + self.button[button_name].size[0]):
-                if self.xy_button[button_name][1] <= mapped_y <= (
-                        self.xy_button[button_name][1] + self.button[button_name].size[1]):
-                    print("Exit touched")  # TODO Exit app
-
-            button_name = "radio"
-            if self.xy_button[button_name][0] <= mapped_x <= (
-                    self.xy_button[button_name][0] + self.button[button_name].size[0]):
-                if self.xy_button[button_name][1] <= mapped_y <= (
-                        self.xy_button[button_name][1] + self.button[button_name].size[1]):
-                    print("Radio touched")  # TODO Show radio window
-                    # self.which_window = ActiveWindow.RADIO
-                    self.render()
-
-            button_name = "alarm"
-            if self.xy_button[button_name][0] <= mapped_x <= (
-                    self.xy_button[button_name][0] + self.button[button_name].size[0]):
-                if self.xy_button[button_name][1] <= mapped_y <= (
-                        self.xy_button[button_name][1] + self.button[button_name].size[1]):
-                    print("Alarm touched")  # TODO Show radio window
-                    # self.which_window = ActiveWindow.ALARM
-                    self.render()
-
-            button_name = "details"
-            if self.xy_button[button_name][0] <= mapped_x <= (
-                    self.xy_button[button_name][0] + self.button[button_name].size[0]):
-                if self.xy_button[button_name][1] <= mapped_y <= (
-                        self.xy_button[button_name][1] + self.button[button_name].size[1]):
-                    print("Details touched")  # TODO Toggle details
-                    show_details = not self.main.config.getboolean("Clock", "show_details")
-                    self.main.config.set("Clock", "show_details", str(show_details))
-                    self.render()
-
-        if self.which_window == ActiveWindow.RADIO:
-            button_name = "clock"
-            if self.xy_button[button_name][0] <= mapped_x <= (
-                    self.xy_button[button_name][0] + self.button[button_name].size[0]):
-                if self.xy_button[button_name][1] <= mapped_y <= (
-                        self.xy_button[button_name][1] + self.button[button_name].size[1]):
-                    print("Clock touched")  # TODO Show clock window
-                    # self.which_window = ActiveWindow.CLOCK
-                    self.render()
