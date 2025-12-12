@@ -445,14 +445,14 @@ class SPIWindow:
                 self.day[index] = d.resize(DIGIT_SIZE_MEDIUM)
                 index += 1
 
-        if self.time_util.weather_client.forecast["today"]["sun"]["is_up"] and not self.show_details:
-            self.show_details = True
-            self.logger.debug("Showing details: " + str(self.show_details))
-            self.main.config.set("Clock", "show_details", str(self.show_details))
-        elif not self.time_util.weather_client.forecast["today"]["sun"]["is_up"] and self.show_details:
-            self.show_details = False
-            self.logger.debug("Showing details: " + str(self.show_details))
-            self.main.config.set("Clock", "show_details", str(self.show_details))
+        # if self.time_util.weather_client.forecast["today"]["sun"]["is_up"] and not self.show_details:
+        #     self.show_details = True
+        #     self.logger.debug("Showing details: " + str(self.show_details))
+        #     self.main.config.set("Clock", "show_details", str(self.show_details))
+        # elif not self.time_util.weather_client.forecast["today"]["sun"]["is_up"] and self.show_details:
+        #     self.show_details = False
+        #     self.logger.debug("Showing details: " + str(self.show_details))
+        #     self.main.config.set("Clock", "show_details", str(self.show_details))
 
     def update_astro(self):
         if self.time_util.can_update_astro():

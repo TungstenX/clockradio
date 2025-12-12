@@ -61,7 +61,7 @@ class SPIClient:
             raise SystemExit("pigpio daemon not running. Start with: sudo pigpiod")
 
         self.spi_touch = self.pi.spi_open(SPI_BUS, 2000000, 0)
-        self.logger.info("SPI HANDLE:", self.spi_touch, type(self.spi_touch))
+        self.logger.info("SPI HANDLE:", str(self.spi_touch), str(type(self.spi_touch)))
         self.spi_display = spidev.SpiDev()
         self.spi_display.open(SPI_BUS, SPI_DEVICE)
         self.spi_display.max_speed_hz = SPI_MAX_HZ
