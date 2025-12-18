@@ -1,14 +1,15 @@
+import copy
 import datetime
+import event_emitter as events
 import logging
 import os
 import threading
 import time
-from enum import Enum
-from pathlib import Path
 
-import event_emitter as events
-from PIL import Image
+from enum import Enum
 from interval_timer import IntervalTimer
+from pathlib import Path
+from PIL import Image
 
 from spi_app.SPIClient import SPIClient
 from spi_app.radio.RadioClient import RadioClient
@@ -17,9 +18,13 @@ from spi_app.ui.MSP3520 import MSP3520
 from spi_app.ui.UIUtil import UIUtil
 from spi_app.weather.WeatherCode import WeatherCode, TimeOfDay
 
+DIGIT_SIZE_X_LARGE = (126, 95)
+DIGIT_SPACE_X_LARGE = 9
 DIGIT_SIZE_MEDIUM = (40, 30)
 DIGIT_SIZE_SMALL = (20, 15)
 DIGIT_SIZE_X_SMALL = (10, 7)
+
+COLON_SIZE_X_LARGE = (126, 19)
 COLON_SIZE_MEDIUM = (20, 6)
 BUTTON_SIZE = (30, 30)
 BUTTON_SELECTOR_SIZE = (40, 40)
@@ -395,12 +400,33 @@ class SPIWindow:
             self.bg_pix.paste(self.button["clock"], self.xy_button["clock"], mask=self.button["clock"])
 
     def render_date_time(self):
+        xy = copy.deepcopy(self.xy_time_date)
+        xy_colon = copy.deepcopy(self.xy_time_colon)
+
+        if not self.show_details:
+            y = 24
+            xy_colon = (97, y + (DIGIT_SIZE_X_LARGE[1] * 2) + (DIGIT_SPACE_X_LARGE * 2))
+
+            for i in range(0, 4):
+                xy[i] = (97, y)
+                if i == 1:
+                    y += COLON_SIZE_X_LARGE[1] + DIGIT_SPACE_X_LARGE
+                y += DIGIT_SIZE_X_LARGE[1] + DIGIT_SPACE_X_LARGE
+
         index = 0
         for pix in self.time_date:
-            self.bg_pix.paste(pix, self.xy_time_date[index], mask=pix)
+            tmp_pix = pix
+            if not self.show_details and index < 4:
+                tmp_pix = pix.resize(DIGIT_SIZE_X_LARGE)
+            self.bg_pix.paste(tmp_pix, xy[index], mask=tmp_pix)
             index += 1
 
-        self.bg_pix.paste(self.colon, self.xy_time_colon, mask=self.colon)
+        # Colon
+        tmp_pix = self.colon
+        if not self.show_details:
+            tmp_pix = self.colon.resize(COLON_SIZE_X_LARGE)
+        self.bg_pix.paste(tmp_pix, xy_colon, mask=tmp_pix)
+
         # Day
         index = 0
         for pix in self.day:
