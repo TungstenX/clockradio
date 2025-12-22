@@ -85,9 +85,12 @@ class SPIClient:
 
     def read_coord(self, cmd):
         with spi_lock:
-            self.pi.write(GPIO_TCS, 0)
-            _, data = self.pi.spi_xfer(self.spi_touch, bytes([cmd, 0, 0]))
-            self.pi.write(GPIO_TCS, 1)
+            try:
+                self.pi.write(GPIO_TCS, 0)
+                _, data = self.pi.spi_xfer(self.spi_touch, bytes([cmd, 0, 0]))
+                self.pi.write(GPIO_TCS, 1)
+            except:
+                self.logger.error("Error while read_coord")
         value = ((data[1] << 8) | data[2]) >> 3
         return value
 
@@ -102,10 +105,12 @@ class SPIClient:
                 y = self.read_coord(0xD0)  # Y command
 
                 self.pi.write(GPIO_TOUCH_CS, 1)
-                self.logger.info("Touch:", x, y)
+                self.logger.info(f"Touch: ({x}, {y})")
                 self.event_emitter.emit('touch')
 
                 time.sleep(0.02)
+        except:
+            self.logger.error("Error while read_touch_worker")
         finally:
             self.reading = False
 
@@ -116,7 +121,10 @@ class SPIClient:
             threading.Thread(target=self.read_touch_worker, daemon=True).start()
 
     def gpio_write(self, pin, level):
-        self.pi.write(pin, 1 if level else 0)
+        try:
+            self.pi.write(pin, 1 if level else 0)
+        except:
+            self.logger.error("Error while gpio_write")
 
     def hw_reset(self):
         self.gpio_write(GPIO_RESET, 0)
@@ -129,9 +137,12 @@ class SPIClient:
         self.gpio_write(GPIO_DC, 1 if is_data else 0)
 
     def send_cmd(self, cmd):
-        self.set_dc(False)
-        # use xfer2 for full-duplex safe transfer
-        self.spi_display.xfer2([cmd])
+        try:
+            self.set_dc(False)
+            # use xfer2 for full-duplex safe transfer
+            self.spi_display.xfer2([cmd])
+        except:
+            self.logger.error("Error while send_cmd")
 
     def send_data_bytes(self, bts):
         self.set_dc(True)
@@ -150,7 +161,6 @@ class SPIClient:
             self.logger.error("Time out error while send data bytes")
         except:
             self.logger.error("Error while send data bytes")
-
         self.gpio_write(GPIO_LCD_CS, 1)
 
     # ------- ILI9488 init (minimal, common sequence) -------
@@ -210,7 +220,10 @@ class SPIClient:
         self.logger.info("Done writing image to display.")
 
     def close(self):
-        self.spi_display.close()
-        if self.cb:
-            self.cb.cancel()
-        self.pi.stop()
+        try:
+            self.spi_display.close()
+            if self.cb:
+                self.cb.cancel()
+            self.pi.stop()
+        except:
+            self.logger.error("Error while close")

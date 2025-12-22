@@ -36,14 +36,21 @@
 #     t1 = T1(t2.em)
 #     t2.fire()
 
-import copy
-array_of_dic = [(120, 102), (120, 168), (120, 252), (120, 318)]
-dic = (120, 102)
-copy_array_of_dic = copy.deepcopy(array_of_dic)
-copy_dic = copy.deepcopy(dic)
-copy_array_of_dic[0] = (copy_array_of_dic[0][0], 0)
-print(copy_array_of_dic)
-print(array_of_dic)
+# import copy
+# array_of_dic = [(120, 102), (120, 168), (120, 252), (120, 318)]
+# dic = (120, 102)
+# copy_array_of_dic = copy.deepcopy(array_of_dic)
+# copy_dic = copy.deepcopy(dic)
+# copy_array_of_dic[0] = (copy_array_of_dic[0][0], 0)
+# print(copy_array_of_dic)
+# print(array_of_dic)
+# x = 4
+# for i in range(0, x):
+#     print(i)
+#     if i == 2:
+#         print("x = 11")
+#         x = 11
 
-for i in range(0, 4):
-    print(i)
+
+x = None
+print(f"This is {x}")
