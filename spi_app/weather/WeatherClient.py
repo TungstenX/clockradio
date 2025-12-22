@@ -2,7 +2,6 @@ import datetime
 import logging
 import requests
 
-from datetime import datetime
 from dateutil import parser
 
 from spi_app.ui.UIUtil import ProgressBarDataCR
