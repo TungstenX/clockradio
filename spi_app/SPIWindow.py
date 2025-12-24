@@ -125,7 +125,7 @@ class SPIWindow:
         self.init(home_dir, start_test_mode)
         tempo = int(self.main.config.get("General", "interval"))
         for interval in IntervalTimer(tempo):
-            self.logger.info(interval)
+            self.logger.debug(interval)
             self.update()
             # File path
             stop = os.path.join(home_dir, "stop")
