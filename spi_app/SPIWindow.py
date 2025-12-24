@@ -119,6 +119,7 @@ class SPIWindow:
         self.button_selector = None
         self.button_selected = None
         self.show_details = None
+        self.last_temp_log = None
         self.logger = logging.getLogger()
 
         self.init(home_dir, start_test_mode)
@@ -450,6 +451,7 @@ class SPIWindow:
                         index += 1
 
     def update(self):
+        self.read_cpu_temp()
         if self.which_window == ActiveWindow.CLOCK:
             self.update_time_date()
             self.update_astro()
@@ -590,3 +592,23 @@ class SPIWindow:
             self.radio_client.play = self.main.toggle_play()
             self.logger.debug("Is radio playing: " + str(self.radio_client.play))
         self.render()
+
+    def read_cpu_temp(self):
+        tempo = int(self.main.config.get("General", "interval_temp_read"))
+        tt = time.time()  # seconds
+        if self.last_temp_log is None or self.last_temp_log + tempo <= tt:  # + 10s
+            self.last_temp_log = tt + tempo
+            temp_file = Path("/sys/class/thermal/thermal_zone0/temp")
+            if not temp_file.exists():
+                self.logger.error("Could not find temp file: " + temp_file.name)
+                return
+            with temp_file.open() as f:
+                temp = temp_file.read()
+            temp_file.close()
+            self.logger.debug("Reading temp: " + temp)
+            f_temp = float(temp) / 1000.0
+
+            if f_temp > 80.0:
+                self.logger.error(f"CPU Temperatures: {f_temp:.1f}°C")
+            else:
+                self.logger.info(f"CPU Temperatures: {f_temp:.1f}°C")
