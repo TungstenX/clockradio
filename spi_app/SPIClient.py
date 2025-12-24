@@ -212,12 +212,12 @@ class SPIClient:
     # ------- main flow -------
     def output_image(self, image: Image.Image):
         # export pins as outputs
-        self.logger.info("Converting image to RGB666 (this may take a few seconds)...")
+        self.logger.debug("Converting image to RGB666 (this may take a few seconds)...")
         data = rgb888_to_rgb666_bytes(image)
         self.set_window(0, 0, WIDTH - 1, HEIGHT - 1)
-        self.logger.info("Writing image to display...")
+        self.logger.debug("Writing image to display...")
         self.send_data_bytes(data)
-        self.logger.info("Done writing image to display.")
+        self.logger.debug("Done writing image to display.")
 
     def close(self):
         try:
