@@ -604,7 +604,7 @@ class SPIWindow:
                 return
             with temp_file.open() as f:
                 temp = f.read()
-            temp_file.close()
+                
             self.logger.debug("Reading temp: " + temp)
             f_temp = float(temp) / 1000.0
 
