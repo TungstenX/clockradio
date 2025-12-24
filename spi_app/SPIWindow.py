@@ -603,7 +603,7 @@ class SPIWindow:
                 self.logger.error("Could not find temp file: " + temp_file.name)
                 return
             with temp_file.open() as f:
-                temp = temp_file.read()
+                temp = f.read()
             temp_file.close()
             self.logger.debug("Reading temp: " + temp)
             f_temp = float(temp) / 1000.0
