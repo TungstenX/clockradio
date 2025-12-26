@@ -147,7 +147,7 @@ class SPIClient:
         with encoder_lock:
             try:
                 CLK_state = self.pi.read(GPIO_RE_CLK)
-                self.logger.info(f"encode_callback: {gpio} {level} {tick} {CLK_state}")
+                # self.logger.info(f"encode_callback: {gpio} {level} {tick} {CLK_state}")
                 # If the state of CLK is changed, then pulse occurred
                 # React to only the rising edge (from LOW to HIGH) to avoid double count
                 if CLK_state != self.prev_CLK_state and CLK_state == HIGH:
