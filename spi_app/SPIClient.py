@@ -83,9 +83,9 @@ class SPIClient:
         self.pi.set_mode(GPIO_TCS, pigpio.OUTPUT)
         self.pi.write(GPIO_TCS, 1)
 
-        self.pi.set_mode(GPIO_RE_CLK, pigpio.IN)
-        self.pi.set_mode(GPIO_RE_DT, pigpio.IN)
-        self.pi.set_mode(GPIO_RE_SW, pigpio.IN)
+        self.pi.set_mode(GPIO_RE_CLK, pigpio.INPUT)
+        self.pi.set_mode(GPIO_RE_DT, pigpio.INPUT)
+        self.pi.set_mode(GPIO_RE_SW, pigpio.INPUT)
         self.pi.set_pull_up_down(GPIO_RE_CLK, pigpio.PUD_UP)
         self.pi.set_pull_up_down(GPIO_RE_DT, pigpio.PUD_UP)
         self.pi.set_pull_up_down(GPIO_RE_SW, pigpio.PUD_UP)
