@@ -159,7 +159,6 @@ class SPIClient:
                         # The encoder is rotating in clockwise direction => increase the counter
                         direction = DIRECTION_CW
                     self.event_emitter.emit('encoder', direction)
-                    time.sleep(0.02)
                 # Save last CLK state
                 self.prev_CLK_state = CLK_state
             except Exception as e:

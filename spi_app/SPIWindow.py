@@ -614,9 +614,9 @@ class SPIWindow:
         with window_encoder_lock:
             tt = time.time()  # seconds
             #print(f"tt = {tt:.3f}")
-            if self.last_encoder_time is None or self.last_encoder_time + 0.1 <= tt:  # + 0.1s
+            if self.last_encoder_time is None or self.last_encoder_time + 0.01 <= tt:  # + 0.1s
                 self.logger.debug("Encoder: Last press is None or ready")
-                self.last_encoder_time = tt + 0.1
+                self.last_encoder_time = tt + 0.01
             else:
                 self.logger.debug("Encoder: Busy")
                 return
