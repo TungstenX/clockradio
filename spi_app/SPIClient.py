@@ -9,6 +9,8 @@ import spidev
 from PIL import Image
 
 spi_lock = threading.Lock()
+encoder_lock = threading.Lock()
+encoder_sw_lock = threading.Lock()
 
 em = events.EventEmitter()
 # ========== CONFIG ==========
@@ -31,6 +33,13 @@ SPI_MAX_HZ = 48000000  # try high, reduce if unstable
 WIDTH  = 320
 HEIGHT = 480
 
+#Encoder
+LOW = 0
+HIGH = 1
+DIRECTION_CW = 0
+DIRECTION_CCW = 1
+
+encoder_direction = DIRECTION_CW
 
 # ============================
 
@@ -67,6 +76,7 @@ class SPIClient:
 
         self.spi_touch = self.pi.spi_open(SPI_BUS, 2000000, 0)
         self.logger.info(f"SPI HANDLE: {str(self.spi_touch)} {str(type(self.spi_touch))}")
+
         self.spi_display = spidev.SpiDev()
         self.spi_display.open(SPI_BUS, SPI_DEVICE)
         self.spi_display.max_speed_hz = SPI_MAX_HZ
@@ -94,7 +104,8 @@ class SPIClient:
         self.reading = False
         self.cb = self.pi.callback(GPIO_TIRQ, pigpio.FALLING_EDGE, self.irq_callback)
         self.encoder = self.pi.callback(GPIO_RE_CLK, pigpio.RISING_EDGE, self.encoder_callback)
-        self.encoder_sw = self.pi.callback(GPIO_RE_CLK, pigpio.FALLING_EDGE, self.encoder_sw_callback)
+        self.encoder_sw = self.pi.callback(GPIO_RE_DT, pigpio.FALLING_EDGE, self.encoder_sw_callback)
+
         self.event_emitter = event_m
 
     def read_coord(self, cmd):
@@ -130,12 +141,26 @@ class SPIClient:
 
     # Encoder callback
     def encoder_callback(self, gpio, level, tick):
-        CLK_state = self.pi.read(GPIO_RE_CLK)
-        DT_state = self.pi.read(GPIO_RE_DT)
-        print(f"encode_callback: {gpio} {level} {tick} {CLK_state} {DT_state}")
-        # if level == 0 and not self.reading:
-        #     # launch worker thread
-        #     threading.Thread(target=self.read_touch_worker, daemon=True).start()
+        with spi_lock:
+            try:
+                CLK_state = self.pi.read(GPIO_RE_CLK)
+                self.logger.info(f"encode_callback: {gpio} {level} {tick} {CLK_state}")
+                # If the state of CLK is changed, then pulse occurred
+                # React to only the rising edge (from LOW to HIGH) to avoid double count
+                if CLK_state != self.prev_CLK_state and CLK_state == HIGH:
+                    # If the DT state is HIGH, the encoder is rotating in counter-clockwise direction
+                    # Decrease the counter
+                    if self.pi.read(GPIO_RE_DT) == HIGH:
+                        direction = DIRECTION_CCW
+                    else:
+                        # The encoder is rotating in clockwise direction => increase the counter
+                        direction = DIRECTION_CW
+                    self.event_emitter.emit('encoder', direction)
+                    time.sleep(0.02)
+                # Save last CLK state
+                self.prev_CLK_state = CLK_state
+            except:
+                self.logger.error("Error while encoder_callback")
 
     # Encoder switch callback
     def encoder_sw_callback(self, gpio, level, tick):

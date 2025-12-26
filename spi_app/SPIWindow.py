@@ -31,6 +31,8 @@ BUTTON_SELECTOR_SIZE = (40, 40)
 
 em = events.EventEmitter()
 press_lock = threading.Lock()
+window_encoder_lock = threading.Lock()
+window_encoder_sw_lock = threading.Lock()
 
 
 class ActiveWindow(Enum):
@@ -296,6 +298,7 @@ class SPIWindow:
         self.screen_press_y = 10
         self.msp = MSP3520()
         self.event_emitter.on('touch', self.touch)
+        self.event_emitter.on('encoder', self.encoder)
         self.radio_client = RadioClient()
 
     def render_blank(self):
@@ -572,6 +575,17 @@ class SPIWindow:
         pix_a[0] = self.ui_util.pix_nums[int(str_min[0])].resize(DIGIT_SIZE_SMALL)
         pix_a[1] = self.ui_util.pix_nums[int(str_min[1])].resize(DIGIT_SIZE_SMALL)
         pix_a[2] = self.ui_util.pix_percentage.resize(DIGIT_SIZE_SMALL)
+
+    def encoder(self, direction):
+        with window_encoder_lock:
+            tt = time.time()  # seconds
+            if self.last_encoder_time is None or self.last_encoder_time + 1 <= tt:  # + 1s
+                self.logger.info("Encoder: Last press is None or ready")
+                self.last_encoder_time = tt + 1
+            else:
+                self.logger.info("Encoder: Busy")
+                return
+        print(f"Window Encoder: {direction}")
 
     def touch(self):
         with press_lock:
