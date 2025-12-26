@@ -119,6 +119,7 @@ class SPIWindow:
         self.screen_press_y = None
         self.last_press_time = None
         self.last_encoder_time = None
+        self.last_encoder_sw_time = None
         self.button_selector = None
         self.button_selected = None
         self.show_details = None
@@ -300,6 +301,7 @@ class SPIWindow:
         self.msp = MSP3520()
         self.event_emitter.on('touch', self.touch)
         self.event_emitter.on('encoder', self.encoder)
+        self.event_emitter.on('encoder_sw', self.encoder_sw)
         self.radio_client = RadioClient()
 
     def render_blank(self):
@@ -397,7 +399,7 @@ class SPIWindow:
         if self.which_window == ActiveWindow.CLOCK:
             s_xy = self.xy_button[self.button_selected]
             self.bg_pix.paste(self.button_selector, (s_xy[0] - 5, s_xy[1] - 5), mask=self.button_selector)
-            self.bg_pix.paste(self.button["exit"], self.xy_button["exit"], mask=self.button["exit"])
+            # self.bg_pix.paste(self.button["exit"], self.xy_button["exit"], mask=self.button["exit"])
             self.bg_pix.paste(self.button["radio"], self.xy_button["radio"], mask=self.button["radio"])
             self.bg_pix.paste(self.button["alarm"], self.xy_button["alarm"], mask=self.button["alarm"])
             self.bg_pix.paste(self.button["details"], self.xy_button["details"], mask=self.button["details"])
@@ -577,17 +579,63 @@ class SPIWindow:
         pix_a[1] = self.ui_util.pix_nums[int(str_min[1])].resize(DIGIT_SIZE_SMALL)
         pix_a[2] = self.ui_util.pix_percentage.resize(DIGIT_SIZE_SMALL)
 
+    def encoder_sw(self):
+        with window_encoder_sw_lock:
+            tt = time.time()  # seconds
+            #print(f"tt = {tt:.3f}")
+            if self.last_encoder_sw_time is None or self.last_encoder_sw_time + 0.1 <= tt:  # + 0.1s
+                self.logger.debug("Encoder Switch: Last press is None or ready")
+                self.last_encoder_time = tt + 0.1
+            else:
+                self.logger.debug("Encoder Switch: Busy")
+                return
+
+        print("Window Encoder Switch")
+        if self.which_window == ActiveWindow.CLOCK:
+            match self.button_selected:
+                case "alarm":
+                    self.logger.error("Encoder Switch: Alarm TBD")
+                case "radio":
+                    self.logger.info("Encoder Switch: Switch to Radio")
+                    self.which_window == ActiveWindow.RADIO
+                case "details":
+                    self.logger.info("Encoder Switch: Toggling Details")
+                    self.show_details = not self.show_details
+                    self.logger.debug("Showing details: " + str(self.show_details))
+                    self.main.config.set("Clock", "show_details", str(self.show_details))
+
+        self.render()
+
     def encoder(self, direction):
         with window_encoder_lock:
             tt = time.time()  # seconds
             #print(f"tt = {tt:.3f}")
-            if self.last_encoder_time is None or self.last_encoder_time + 0.5 <= tt:  # + 0.5s
+            if self.last_encoder_time is None or self.last_encoder_time + 0.1 <= tt:  # + 0.1s
                 self.logger.debug("Encoder: Last press is None or ready")
-                self.last_encoder_time = tt + 0.5
+                self.last_encoder_time = tt + 0.1
             else:
                 self.logger.debug("Encoder: Busy")
                 return
         print(f"Window Encoder: {direction}")
+        if self.which_window == ActiveWindow.CLOCK:
+            match self.button_selected:
+                case "alarm":
+                    if direction == 0:
+                        self.button_selected = "radio"
+                    else:
+                        self.button_selected = "details"
+                case "radio":
+                    if direction == 0:
+                        self.button_selected = "details"
+                    else:
+                        self.button_selected = "alarm"
+                case "details":
+                    if direction == 0:
+                        self.button_selected = "alarm"
+                    else:
+                        self.button_selected = "radio"
+
+        self.render()
 
     def touch(self):
         with press_lock:
