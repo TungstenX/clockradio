@@ -128,7 +128,7 @@ class SPIClient:
             self.reading = False
 
     # Encoder callback
-    def encode_callback(self, gpio, level, tick):
+    def encoder_callback(self, gpio, level, tick):
         print(f"encode_callback: {gpio} {level} {tick}")
         # if level == 0 and not self.reading:
         #     # launch worker thread
