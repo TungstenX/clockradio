@@ -168,7 +168,7 @@ class SPIClient:
 
     def encoder_worker_sw(self):
         self.reading_encoder_sw = True
-        with encoder_lock_sw:
+        with encoder_sw_lock:
             try:
                 self.event_emitter.emit('encoder_sw')
                 time.sleep(0.02)
