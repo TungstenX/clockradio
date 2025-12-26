@@ -94,6 +94,7 @@ class SPIClient:
         self.reading = False
         self.cb = self.pi.callback(GPIO_TIRQ, pigpio.FALLING_EDGE, self.irq_callback)
         self.encoder = self.pi.callback(GPIO_RE_CLK, pigpio.RISING_EDGE, self.encoder_callback)
+        self.encoder_sw = self.pi.callback(GPIO_RE_CLK, pigpio.FALLING_EDGE, self.encoder_sw_callback)
         self.event_emitter = event_m
 
     def read_coord(self, cmd):
@@ -129,10 +130,16 @@ class SPIClient:
 
     # Encoder callback
     def encoder_callback(self, gpio, level, tick):
-        print(f"encode_callback: {gpio} {level} {tick}")
+        CLK_state = self.pi.read(GPIO_RE_CLK)
+        DT_state = self.pi.read(GPIO_RE_DT)
+        print(f"encode_callback: {gpio} {level} {tick} {CLK_state} {DT_state}")
         # if level == 0 and not self.reading:
         #     # launch worker thread
         #     threading.Thread(target=self.read_touch_worker, daemon=True).start()
+
+    # Encoder switch callback
+    def encoder_sw_callback(self, gpio, level, tick):
+        print(f"encode_sw_callback: {gpio} {level} {tick}")
 
     # IRQ callback
     def irq_callback(self, gpio, level, tick):
