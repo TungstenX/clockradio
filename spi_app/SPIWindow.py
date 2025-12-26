@@ -118,6 +118,7 @@ class SPIWindow:
         self.screen_press_x = None
         self.screen_press_y = None
         self.last_press_time = None
+        self.last_encoder_time = None
         self.button_selector = None
         self.button_selected = None
         self.show_details = None
