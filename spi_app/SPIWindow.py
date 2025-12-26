@@ -33,7 +33,7 @@ em = events.EventEmitter()
 press_lock = threading.Lock()
 window_encoder_lock = threading.Lock()
 window_encoder_sw_lock = threading.Lock()
-
+window_render_lock = threading.Lock()
 
 class ActiveWindow(Enum):
     CLOCK = 0
@@ -309,39 +309,43 @@ class SPIWindow:
             self.spi_client.output_image(self.ui_util.bg["blank"])
 
     def render(self):
-        if self.show_details:
-            self.bg_pix = Image.open(self.bg_file)
-        else:
-            self.bg_pix = Image.open(self.ui_util.bg["no_details"])
+        with window_render_lock:
+            try:
+                if self.show_details:
+                    self.bg_pix = Image.open(self.bg_file)
+                else:
+                    self.bg_pix = Image.open(self.ui_util.bg["no_details"])
 
-        # Buttons
-        self.render_buttons()
+                # Buttons
+                self.render_buttons()
 
-        if self.which_window == ActiveWindow.CLOCK:
-            # Date and Time
-            self.render_date_time()
-            if self.show_details:
-                # Sunrise/set Moonrise/set and progress
-                self.render_sun_moon()
-                # Min max temps + rain
-                self.render_min_max()
-            self.bg_pix.paste(self.ui_util.fg_frame, (0, 0), mask=self.ui_util.fg_frame)
-        elif self.which_window == ActiveWindow.RADIO:
-            if not self.radio_client.play:
-                self.bg_pix.paste(self.ui_util.buttons["play"], self.xy_radio_button["play"],
-                                  mask=self.ui_util.buttons["play"])
-            if self.radio_client.station == 1:
-                self.bg_pix.paste(self.ui_util.buttons["station 2"], self.xy_radio_button["station 2"],
-                                  mask=self.ui_util.buttons["station 2"])
-            else:
-                self.bg_pix.paste(self.ui_util.buttons["station 1"], self.xy_radio_button["station 1"],
-                                  mask=self.ui_util.buttons["station 1"])
+                if self.which_window == ActiveWindow.CLOCK:
+                    # Date and Time
+                    self.render_date_time()
+                    if self.show_details:
+                        # Sunrise/set Moonrise/set and progress
+                        self.render_sun_moon()
+                        # Min max temps + rain
+                        self.render_min_max()
+                    self.bg_pix.paste(self.ui_util.fg_frame, (0, 0), mask=self.ui_util.fg_frame)
+                elif self.which_window == ActiveWindow.RADIO:
+                    if not self.radio_client.play:
+                        self.bg_pix.paste(self.ui_util.buttons["play"], self.xy_radio_button["play"],
+                                          mask=self.ui_util.buttons["play"])
+                    if self.radio_client.station == 1:
+                        self.bg_pix.paste(self.ui_util.buttons["station 2"], self.xy_radio_button["station 2"],
+                                          mask=self.ui_util.buttons["station 2"])
+                    else:
+                        self.bg_pix.paste(self.ui_util.buttons["station 1"], self.xy_radio_button["station 1"],
+                                          mask=self.ui_util.buttons["station 1"])
 
-        if not self.spi_client is None:
-            self.spi_client.output_image(self.bg_pix)
-        else:
-            self.bg_pix.save('test1.bmp')
-            self.logger.info("spi_client could not init or running in test mode")
+                if not self.spi_client is None:
+                    self.spi_client.output_image(self.bg_pix)
+                else:
+                    self.bg_pix.save('test1.bmp')
+                    self.logger.info("spi_client could not init or running in test mode")
+            except Exception as e:
+                self.logger.error(f"Error while rendring\n{e}")
 
     def render_sun_moon(self):
         for sm in ["sun", "moon"]:
@@ -585,7 +589,7 @@ class SPIWindow:
             #print(f"tt = {tt:.3f}")
             if self.last_encoder_sw_time is None or self.last_encoder_sw_time + 0.1 <= tt:  # + 0.1s
                 self.logger.debug("Encoder Switch: Last press is None or ready")
-                self.last_encoder_time = tt + 0.1
+                self.last_encoder_sw_time = tt + 0.1
             else:
                 self.logger.debug("Encoder Switch: Busy")
                 return

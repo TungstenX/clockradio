@@ -102,6 +102,8 @@ class SPIClient:
 
         # Register interrupt callback
         self.reading = False
+        self.reading_encoder = False
+        self.reading_encoder_sw = False
         self.prev_CLK_state = 0
         self.cb = self.pi.callback(GPIO_TIRQ, pigpio.FALLING_EDGE, self.irq_callback)
         self.encoder = self.pi.callback(GPIO_RE_CLK, pigpio.RISING_EDGE, self.encoder_callback)
@@ -140,9 +142,9 @@ class SPIClient:
         finally:
             self.reading = False
 
-    # Encoder callback
-    def encoder_callback(self, gpio, level, tick):
-        with spi_lock:
+    def encoder_worker(self):
+        self.reading_encoder = True
+        with encoder_lock:
             try:
                 CLK_state = self.pi.read(GPIO_RE_CLK)
                 self.logger.info(f"encode_callback: {gpio} {level} {tick} {CLK_state}")
@@ -162,10 +164,30 @@ class SPIClient:
                 self.prev_CLK_state = CLK_state
             except Exception as e:
                 self.logger.error(f"Error while encoder_callback\n{e}")
+        self.reading_encoder = False
+
+    def encoder_worker_sw(self):
+        self.reading_encoder_sw = True
+        with encoder_lock_sw:
+            try:
+                self.event_emitter.emit('encoder_sw')
+                time.sleep(0.02)
+            except Exception as e:
+                self.logger.error(f"Error while encoder_sw_callback\n{e}")
+        self.reading_encoder_sw = False
+
+    # Encoder callback
+    def encoder_callback(self, gpio, level, tick):
+        if not self.reading_encoder:
+            # launch worker thread
+            threading.Thread(target=self.encoder_worker, daemon=True).start()
+
 
     # Encoder switch callback
     def encoder_sw_callback(self, gpio, level, tick):
-        print(f"encode_sw_callback: {gpio} {level} {tick}")
+        if not self.reading_encoder_sw:
+            # launch worker thread
+            threading.Thread(target=self.encoder_worker_sw, daemon=True).start()
 
     # IRQ callback
     def irq_callback(self, gpio, level, tick):
