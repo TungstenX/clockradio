@@ -586,7 +586,7 @@ class SPIWindow:
     def encoder_sw(self):
         with window_encoder_sw_lock:
             tt = time.time()  # seconds
-            #print(f"tt = {tt:.3f}")
+            #self.logger.debug(f"tt = {tt:.3f}")
             if self.last_encoder_sw_time is None or self.last_encoder_sw_time + 0.1 <= tt:  # + 0.1s
                 self.logger.debug("Encoder Switch: Last press is None or ready")
                 self.last_encoder_sw_time = tt + 0.1
@@ -594,7 +594,7 @@ class SPIWindow:
                 self.logger.debug("Encoder Switch: Busy")
                 return
 
-        print("Window Encoder Switch")
+        self.logger.debug("Window Encoder Switch")
         if self.which_window == ActiveWindow.CLOCK:
             match self.button_selected:
                 case "alarm":
@@ -613,14 +613,14 @@ class SPIWindow:
     def encoder(self, direction):
         with window_encoder_lock:
             tt = time.time()  # seconds
-            #print(f"tt = {tt:.3f}")
+            #self.logger.debug(f"tt = {tt:.3f}")
             if self.last_encoder_time is None or self.last_encoder_time + 0.01 <= tt:  # + 0.1s
                 self.logger.debug("Encoder: Last press is None or ready")
                 self.last_encoder_time = tt + 0.01
             else:
                 self.logger.debug("Encoder: Busy")
                 return
-        print(f"Window Encoder: {direction}")
+        self.logger.debug(f"Window Encoder: {direction}")
         if self.which_window == ActiveWindow.CLOCK:
             match self.button_selected:
                 case "alarm":
