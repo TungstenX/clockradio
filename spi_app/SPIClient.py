@@ -12,18 +12,23 @@ spi_lock = threading.Lock()
 
 em = events.EventEmitter()
 # ========== CONFIG ==========
-GPIO_DC = 25  # BCM GPIO for D/C (Data/Command)
-GPIO_RESET = 24  # BCM GPIO for RESET
-GPIO_LCD_CS = 8
+GPIO_DC       = 25  # BCM GPIO for D/C (Data/Command)
+GPIO_RESET    = 24  # BCM GPIO for RESET
+GPIO_LCD_CS   = 8
 GPIO_TOUCH_CS = 7
-GPIO_TIRQ = 17
-GPIO_TCS = 27
-SPI_BUS = 0
+GPIO_TIRQ     = 17 # (PIN 11)
+GPIO_TCS      = 27
+# Rotary encoder (RE)
+GPIO_RE_CLK = 4   # GPIO04 connected to the rotary encoder's CLK pin (PIN 7)
+GPIO_RE_DT  = 23  # GPIO23 connected to the rotary encoder's DT pin (PIN 16)
+GPIO_RE_SW  = 22  # GPIO22 connected to the rotary encoder's SW pin (PIN 15)
+
+SPI_BUS    = 0
 SPI_DEVICE = 0
 SPI_MAX_HZ = 48000000  # try high, reduce if unstable
 
 # Set your display size here (common: 320x480 or 480x320)
-WIDTH = 320
+WIDTH  = 320
 HEIGHT = 480
 
 
@@ -78,9 +83,17 @@ class SPIClient:
         self.pi.set_mode(GPIO_TCS, pigpio.OUTPUT)
         self.pi.write(GPIO_TCS, 1)
 
+        self.pi.set_mode(GPIO_RE_CLK, pigpio.IN)
+        self.pi.set_mode(GPIO_RE_DT, pigpio.IN)
+        self.pi.set_mode(GPIO_RE_SW, pigpio.IN)
+        self.pi.set_pull_up_down(GPIO_RE_CLK, pigpio.PUD_UP)
+        self.pi.set_pull_up_down(GPIO_RE_DT, pigpio.PUD_UP)
+        self.pi.set_pull_up_down(GPIO_RE_SW, pigpio.PUD_UP)
+
         # Register interrupt callback
         self.reading = False
         self.cb = self.pi.callback(GPIO_TIRQ, pigpio.FALLING_EDGE, self.irq_callback)
+        self.encoder = self.pi.callback(GPIO_RE_CLK, pigpio.RISING_EDGE, self.encoder_callback)
         self.event_emitter = event_m
 
     def read_coord(self, cmd):
@@ -113,6 +126,13 @@ class SPIClient:
             self.logger.error("Error while read_touch_worker")
         finally:
             self.reading = False
+
+    # Encoder callback
+    def encode_callback(self, gpio, level, tick):
+        print(f"encode_callback: {gpio} {level} {tick}")
+        # if level == 0 and not self.reading:
+        #     # launch worker thread
+        #     threading.Thread(target=self.read_touch_worker, daemon=True).start()
 
     # IRQ callback
     def irq_callback(self, gpio, level, tick):
@@ -224,6 +244,10 @@ class SPIClient:
             self.spi_display.close()
             if self.cb:
                 self.cb.cancel()
+
+            if self.encoder:
+                self.encoder.cancel()
+
             self.pi.stop()
         except:
             self.logger.error("Error while close")
