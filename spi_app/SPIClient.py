@@ -104,7 +104,7 @@ class SPIClient:
         self.reading = False
         self.cb = self.pi.callback(GPIO_TIRQ, pigpio.FALLING_EDGE, self.irq_callback)
         self.encoder = self.pi.callback(GPIO_RE_CLK, pigpio.RISING_EDGE, self.encoder_callback)
-        self.encoder_sw = self.pi.callback(GPIO_RE_DT, pigpio.FALLING_EDGE, self.encoder_sw_callback)
+        self.encoder_sw = self.pi.callback(GPIO_RE_SW, pigpio.FALLING_EDGE, self.encoder_sw_callback)
 
         self.event_emitter = event_m
 
