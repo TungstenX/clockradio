@@ -159,8 +159,8 @@ class SPIClient:
                     time.sleep(0.02)
                 # Save last CLK state
                 self.prev_CLK_state = CLK_state
-            except:
-                self.logger.error("Error while encoder_callback")
+            except Exception as e:
+                self.logger.error(f"Error while encoder_callback\n{e}")
 
     # Encoder switch callback
     def encoder_sw_callback(self, gpio, level, tick):
