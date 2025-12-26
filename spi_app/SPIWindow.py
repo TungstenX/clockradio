@@ -345,7 +345,7 @@ class SPIWindow:
                     self.bg_pix.save('test1.bmp')
                     self.logger.info("spi_client could not init or running in test mode")
             except Exception as e:
-                self.logger.error(f"Error while rendring\n{e}")
+                self.logger.error(f"Error while rendering\n{e}")
 
     def render_sun_moon(self):
         for sm in ["sun", "moon"]:

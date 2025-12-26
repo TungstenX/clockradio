@@ -234,8 +234,8 @@ class SPIClient:
                     self.spi_display.xfer2(bts[i:i + CHUNK])
         except TimeoutError:
             self.logger.error("Time out error while send data bytes")
-        except:
-            self.logger.error("Error while send data bytes")
+        except Exception as e:
+            self.logger.error(f"Error while send data bytes\n{e}")
         self.gpio_write(GPIO_LCD_CS, 1)
 
     # ------- ILI9488 init (minimal, common sequence) -------
