@@ -601,7 +601,7 @@ class SPIWindow:
                     self.logger.error("Encoder Switch: Alarm TBD")
                 case "radio":
                     self.logger.info("Encoder Switch: Switch to Radio")
-                    self.which_window == ActiveWindow.RADIO
+                    self.which_window = ActiveWindow.RADIO
                 case "details":
                     self.logger.info("Encoder Switch: Toggling Details")
                     self.show_details = not self.show_details
